@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  role         UserRole @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  orders       Order[]
+}
+
+model Category {
+  id        String @id @default(cuid())
+  name      String @unique
+  slug      String @unique
+  sortOrder Int    @default(0)
+  meals     Meal[]
+}
+
+model Meal {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String
+  priceCents  Int
+  imageUrl    String
+  active      Boolean      @default(true)
+  deletedAt   DateTime?
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  options     MealOption[]
+  allergens   String[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  orderItems  OrderItem[]
+
+  @@index([categoryId, active])
+}
+
+model MealOption {
+  id              String @id @default(cuid())
+  mealId          String
+  meal            Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  name            String
+  priceDeltaCents Int    @default(0)
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
+  subtotalCents   Int
+  taxCents        Int
+  tipCents        Int         @default(0)
+  totalCents      Int
+  deliveryAddress String
+  deliveryPostal  String
+  phone           String
+  notes           String?
+  items           OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  mealId         String
+  meal           Meal    @relation(fields: [mealId], references: [id])
+  quantity       Int
+  unitPriceCents Int
+  itemNote       String?
+}

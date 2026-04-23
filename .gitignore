@@ -46,3 +46,21 @@ Thumbs.db
 .claude/worktrees
 .claude/settings.local.json
 .nx/polygraph
+.angular
+
+test-output
+
+/generated/prisma
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Playwright
+playwright-report
+playwright/.cache
+
+# Overnight loop artifacts (not core code — don't push logs)
+.claude/logs/
+NEEDS_HUMAN.md
