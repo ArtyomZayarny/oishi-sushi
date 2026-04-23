@@ -4,7 +4,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 # PATH + NVM
-export PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"
+export PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$HOME/.local/bin:$PATH"
 export NX_IGNORE_UNSUPPORTED_TS_SETUP=true
 
 # Your GITHUB_TOKEN env var shadows gh keyring auth with an invalid token.
