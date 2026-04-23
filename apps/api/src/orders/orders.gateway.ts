@@ -7,9 +7,10 @@ import {
 } from '@nestjs/websockets';
 import type { Subscription } from 'rxjs';
 import type { Server, Socket } from 'socket.io';
+import type { OrderStatusEvent } from '@org/shared-types';
 import type { JwtPayload } from '../auth/jwt.strategy';
 import { PrismaService } from '../prisma/prisma.service';
-import { OrderEvents, OrderStatusChangedEvent } from './order-events.service';
+import { OrderEvents } from './order-events.service';
 
 @WebSocketGateway({
   cors: {
@@ -70,7 +71,7 @@ export class OrdersGateway
     }
   }
 
-  private broadcast(event: OrderStatusChangedEvent): void {
+  private broadcast(event: OrderStatusEvent): void {
     const payload = {
       orderId: event.orderId,
       status: event.status,

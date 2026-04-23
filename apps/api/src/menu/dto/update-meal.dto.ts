@@ -8,8 +8,9 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import type { MealUpdateReq } from '@org/shared-types';
 
-export class UpdateMealDto {
+export class UpdateMealDto implements MealUpdateReq {
   @IsOptional()
   @IsString()
   @MinLength(1)

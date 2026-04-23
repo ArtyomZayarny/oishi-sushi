@@ -3,12 +3,13 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { UserRole } from '@org/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface JwtPayload {
   sub: string;
   email: string;
-  role: 'CUSTOMER' | 'ADMIN';
+  role: UserRole;
 }
 
 function cookieExtractor(req: Request): string | null {

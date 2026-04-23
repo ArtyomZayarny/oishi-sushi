@@ -1,6 +1,7 @@
 import { IsEmail, IsString, MinLength } from 'class-validator';
+import type { RegisterReq } from '@org/shared-types';
 
-export class RegisterDto {
+export class RegisterDto implements RegisterReq {
   @IsEmail()
   email!: string;
 

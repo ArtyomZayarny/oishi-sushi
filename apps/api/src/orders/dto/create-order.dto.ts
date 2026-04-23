@@ -9,8 +9,9 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+import type { OrderCreateItemReq, OrderCreateReq } from '@org/shared-types';
 
-export class CreateOrderItemDto {
+export class CreateOrderItemDto implements OrderCreateItemReq {
   @IsString()
   @MinLength(1)
   mealId!: string;
@@ -24,7 +25,7 @@ export class CreateOrderItemDto {
   itemNote?: string | null;
 }
 
-export class CreateOrderDto {
+export class CreateOrderDto implements OrderCreateReq {
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })

@@ -8,8 +8,9 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import type { MealCreateReq } from '@org/shared-types';
 
-export class CreateMealDto {
+export class CreateMealDto implements MealCreateReq {
   @IsString()
   @MinLength(1)
   name!: string;

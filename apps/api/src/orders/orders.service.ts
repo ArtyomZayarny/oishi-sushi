@@ -4,7 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Order, OrderItem, OrderStatus } from '@prisma/client';
+import type { Order, OrderItem } from '@prisma/client';
+import type { OrderStatus } from '@org/shared-types';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderEvents } from './order-events.service';

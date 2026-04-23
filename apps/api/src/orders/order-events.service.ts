@@ -1,23 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
-import type { OrderStatus } from '@prisma/client';
-
-export interface OrderStatusChangedEvent {
-  orderId: string;
-  userId: string;
-  status: OrderStatus;
-  timestamp: string;
-}
+import type { OrderStatusEvent } from '@org/shared-types';
 
 @Injectable()
 export class OrderEvents {
-  private readonly subject = new Subject<OrderStatusChangedEvent>();
+  private readonly subject = new Subject<OrderStatusEvent>();
 
-  emitStatusChanged(event: OrderStatusChangedEvent): void {
+  emitStatusChanged(event: OrderStatusEvent): void {
     this.subject.next(event);
   }
 
-  statusChanged$(): Observable<OrderStatusChangedEvent> {
+  statusChanged$(): Observable<OrderStatusEvent> {
     return this.subject.asObservable();
   }
 }
