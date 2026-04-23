@@ -1,8 +1,8 @@
 ---
-phase: 05-api-realtime
-iteration: 4
-last_commit: 080c8d5e9ef9f568c877504192a06457190a7e36
-last_updated: 2026-04-23T21:07:58+00:00
+phase: 06-shared-types
+iteration: 5
+last_commit: a4fd40f4dda6b1187136b3bcbd1493d0fd75044f
+last_updated: 2026-04-23T21:25:00+00:00
 attempts_on_current_phase: 0
 blockers: []
 ---
@@ -12,4 +12,4 @@ blockers: []
 This file is the single source of truth for the overnight autonomous build loop.
 See `docs/_playbook/_overnight-plan.md` §6 for schema.
 
-**Current phase:** `05-api-realtime` — TDD: Socket.IO gateway for order:status:changed (2 commits).
+**Current phase:** `06-shared-types` — Refactor: move DTOs and enums to `libs/shared-types` and wire into api (1 commit).
