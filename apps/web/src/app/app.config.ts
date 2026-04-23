@@ -12,7 +12,7 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './interceptors/auth.interceptor';
@@ -23,7 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideBrowserGlobalErrorListeners(),
     provideClientHydration(withEventReplay()),
-    provideRouter(appRoutes),
+    provideRouter(appRoutes, withComponentInputBinding()),
     provideHttpClient(
       withFetch(),
       withInterceptors([authInterceptor, errorInterceptor]),

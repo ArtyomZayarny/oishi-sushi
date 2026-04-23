@@ -46,7 +46,7 @@ interface Harness {
 
 const setup = (socketUrl: string | null = null): Harness => {
   const sockets: FakeSocket[] = [];
-  const factory = jest.fn((..._args: unknown[]) => {
+  const factory = jest.fn(() => {
     const s = new FakeSocket();
     sockets.push(s);
     return s;

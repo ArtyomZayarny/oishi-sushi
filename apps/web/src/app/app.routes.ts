@@ -32,6 +32,13 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'orders/:id',
+        loadComponent: () =>
+          import('./features/tracking/order-tracking.component').then(
+            (m) => m.OrderTrackingComponent,
+          ),
+      },
+      {
         path: 'admin',
         canActivate: [adminGuard],
         loadComponent: () =>
