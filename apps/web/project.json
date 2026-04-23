@@ -87,6 +87,14 @@
         "staticFilePath": "dist/apps/web/browser",
         "spa": true
       }
+    },
+    "serve-ssr": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "dependsOn": ["build", "@org/api:serve"],
+      "options": {
+        "command": "PORT=4000 NG_ALLOWED_HOSTS=localhost,127.0.0.1 node dist/apps/web/server/server.mjs"
+      }
     }
   }
 }
