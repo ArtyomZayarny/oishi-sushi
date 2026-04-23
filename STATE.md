@@ -1,8 +1,8 @@
 ---
-phase: 02-api-auth
-iteration: 1
-last_commit: 0ecbc18c1fc14f3dd5c3ff4a661d012d9aeec71d
-last_updated: 2026-04-23T23:45:00+03:00
+phase: 03-api-menu
+iteration: 2
+last_commit: b422e83358d5ff406dc2b1de744a27959a76a3a2
+last_updated: 2026-04-23T20:53:58+00:00
 attempts_on_current_phase: 0
 blockers: []
 ---
@@ -12,4 +12,4 @@ blockers: []
 This file is the single source of truth for the overnight autonomous build loop.
 See `docs/_playbook/_overnight-plan.md` §6 for schema.
 
-**Current phase:** `02-api-auth` — TDD: JWT cookie auth + register/login/me + roles guard (2 commits).
+**Current phase:** `03-api-menu` — TDD: public GET + admin CRUD menu endpoints (2 commits).
