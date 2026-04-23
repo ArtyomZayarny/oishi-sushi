@@ -1,8 +1,8 @@
 ---
-phase: 11-web-tracking
-iteration: 10
-last_commit: 6cc85ca74673b9c85594263cd811dcba5f27d416
-last_updated: 2026-04-23T22:12:21+00:00
+phase: 12-web-admin
+iteration: 11
+last_commit: 5cc085492622791eb0e4a615e1458f009becf089
+last_updated: 2026-04-23T22:23:00+00:00
 attempts_on_current_phase: 0
 blockers: []
 ---
@@ -12,4 +12,4 @@ blockers: []
 This file is the single source of truth for the overnight autonomous build loop.
 See `docs/_playbook/_overnight-plan.md` §6 for schema.
 
-**Current phase:** `11-web-tracking` — TDD: WebSocket live order status (socket.io-client service + OrderTrackingComponent with animated badge on status change, 2 commits).
+**Current phase:** `12-web-admin` — TDD: lazy admin panel with AdminMealsComponent + MealEditorComponent (FormArray for options, allergen chips, optimistic UI), 2 commits.
