@@ -25,6 +25,13 @@ export const appRoutes: Route[] = [
           import('./features/cart/cart.component').then((m) => m.CartComponent),
       },
       {
+        path: 'checkout',
+        loadComponent: () =>
+          import('./features/checkout/checkout.component').then(
+            (m) => m.CheckoutComponent,
+          ),
+      },
+      {
         path: 'admin',
         canActivate: [adminGuard],
         loadComponent: () =>
