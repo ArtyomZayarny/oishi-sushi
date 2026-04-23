@@ -42,7 +42,9 @@ export const appRoutes: Route[] = [
         path: 'admin',
         canActivate: [adminGuard],
         loadComponent: () =>
-          import('./pages/admin/admin.component').then((m) => m.AdminComponent),
+          import('./pages/admin/admin-meals.component').then(
+            (m) => m.AdminMealsComponent,
+          ),
       },
     ],
   },

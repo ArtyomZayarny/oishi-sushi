@@ -22,6 +22,13 @@ export class MenuService {
     });
   }
 
+  async listAll(): Promise<Meal[]> {
+    return this.prisma.meal.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   create(dto: CreateMealDto): Promise<Meal> {
     return this.prisma.meal.create({
       data: {

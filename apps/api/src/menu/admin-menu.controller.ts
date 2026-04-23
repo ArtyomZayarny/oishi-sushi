@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -22,6 +23,11 @@ import { MenuService } from './menu.service';
 @Roles(['ADMIN'])
 export class AdminMenuController {
   constructor(private readonly menu: MenuService) {}
+
+  @Get()
+  listAll(): Promise<Meal[]> {
+    return this.menu.listAll();
+  }
 
   @Post()
   create(@Body() dto: CreateMealDto): Promise<Meal> {
