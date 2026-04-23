@@ -1,8 +1,8 @@
 ---
-phase: 04-api-orders
-iteration: 3
-last_commit: 1e08e0d3f38e54533b79d1077a452f0fda5ff678
-last_updated: 2026-04-23T21:00:45+00:00
+phase: 05-api-realtime
+iteration: 4
+last_commit: 080c8d5e9ef9f568c877504192a06457190a7e36
+last_updated: 2026-04-23T21:07:58+00:00
 attempts_on_current_phase: 0
 blockers: []
 ---
@@ -12,4 +12,4 @@ blockers: []
 This file is the single source of truth for the overnight autonomous build loop.
 See `docs/_playbook/_overnight-plan.md` §6 for schema.
 
-**Current phase:** `04-api-orders` — TDD: customer orders + admin orders (2 commits).
+**Current phase:** `05-api-realtime` — TDD: Socket.IO gateway for order:status:changed (2 commits).
