@@ -7,6 +7,10 @@ cd "$(dirname "$0")/.."
 export PATH="$HOME/.nvm/versions/node/v20.20.2/bin:$PATH"
 export NX_IGNORE_UNSUPPORTED_TS_SETUP=true
 
+# Your GITHUB_TOKEN env var shadows gh keyring auth with an invalid token.
+# Unset it so git push uses gh credential helper (keyring).
+unset GITHUB_TOKEN
+
 mkdir -p .claude/logs
 
 # Keep Mac awake
