@@ -20,6 +20,11 @@ export const appRoutes: Route[] = [
         resolve: { menu: menuResolver },
       },
       {
+        path: 'cart',
+        loadComponent: () =>
+          import('./features/cart/cart.component').then((m) => m.CartComponent),
+      },
+      {
         path: 'admin',
         canActivate: [adminGuard],
         loadComponent: () =>
