@@ -69,11 +69,13 @@ export class OrderTrackingComponent {
   private readonly orders = inject(OrdersService);
 
   readonly id = input.required<string>();
-  readonly initialStatus = input<OrderStatus>('PENDING');
+  readonly initialStatus = input<OrderStatus | undefined>('PENDING');
 
   private readonly flash = signal(0);
 
-  readonly status = linkedSignal<OrderStatus>(() => this.initialStatus());
+  readonly status = linkedSignal<OrderStatus>(
+    () => this.initialStatus() ?? 'PENDING',
+  );
   readonly flashKey = this.flash.asReadonly();
   readonly badgeClass = computed(() => BADGE_CLASSES[this.status()]);
 

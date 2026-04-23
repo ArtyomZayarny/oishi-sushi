@@ -2,39 +2,78 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
 
 permissions:
-  actions: read
   contents: read
+  actions: read
+
+env:
+  NX_IGNORE_UNSUPPORTED_TS_SETUP: 'true'
 
 jobs:
-  main:
+  build-and-test:
+    name: Lint, test, build, e2e
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: oishi
+          POSTGRES_PASSWORD: oishi
+          POSTGRES_DB: oishi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U oishi -d oishi"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://oishi:oishi@localhost:5432/oishi
+      JWT_SECRET: ci-only-jwt-secret-not-for-prod
+
     steps:
       - uses: actions/checkout@v4
         with:
-          filter: tree:0
           fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-      # Cache node_modules
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: 'pnpm'
 
-      - run: npm ci
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check  --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e-ci
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/ci/features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
+      - name: Set Nx SHAs
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Migrate + seed database
+        run: |
+          pnpm prisma migrate deploy
+          pnpm db:seed
+
+      - name: Affected lint + test + build
+        run: pnpm nx affected -t lint test build --parallel=3
+
+      - name: Install Playwright chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: pnpm nx e2e web-e2e --reporter=list
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: dist/.playwright/apps/web-e2e/playwright-report
+          retention-days: 7

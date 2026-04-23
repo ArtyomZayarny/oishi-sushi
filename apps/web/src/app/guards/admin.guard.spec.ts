@@ -1,4 +1,4 @@
-import { signal } from '@angular/core';
+import { PLATFORM_ID, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree } from '@angular/router';
 import type { User } from '@org/shared-types';
@@ -35,6 +35,7 @@ describe('adminGuard', () => {
     );
     TestBed.configureTestingModule({
       providers: [
+        { provide: PLATFORM_ID, useValue: 'browser' },
         { provide: AuthService, useValue: { currentUser } },
         { provide: Router, useValue: { parseUrl } },
       ],
@@ -65,6 +66,25 @@ describe('adminGuard', () => {
   it('returns true when user role is ADMIN', () => {
     currentUser.set(ADMIN);
     const result = run();
+    expect(result).toBe(true);
+    expect(parseUrl).not.toHaveBeenCalled();
+  });
+
+  it('returns true (defers to client) when running on the server', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: PLATFORM_ID, useValue: 'server' },
+        { provide: AuthService, useValue: { currentUser } },
+        { provide: Router, useValue: { parseUrl } },
+      ],
+    });
+    const result = TestBed.runInInjectionContext(() =>
+      adminGuard(
+        {} as import('@angular/router').ActivatedRouteSnapshot,
+        {} as import('@angular/router').RouterStateSnapshot,
+      ),
+    );
     expect(result).toBe(true);
     expect(parseUrl).not.toHaveBeenCalled();
   });

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { CartStore } from '../features/cart/cart.store';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 
@@ -44,7 +45,7 @@ import { ToastService } from '../services/toast.service';
                 data-testid="cart-badge"
                 class="ml-1 inline-flex min-w-5 justify-center rounded-full bg-slate-900 px-1.5 py-0.5 text-xs text-white"
               >
-                0
+                {{ cartCount() }}
               </span>
             </a>
           </li>
@@ -92,9 +93,11 @@ import { ToastService } from '../services/toast.service';
 export class AppLayoutComponent {
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
+  private readonly cart = inject(CartStore);
 
   readonly user = this.auth.currentUser;
   readonly isAuthenticated = this.auth.isAuthenticated;
   readonly isAdmin = this.auth.isAdmin;
   readonly toasts = this.toast.messages;
+  readonly cartCount = this.cart.totalQuantity;
 }

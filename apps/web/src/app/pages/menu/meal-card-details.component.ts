@@ -1,6 +1,13 @@
 import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  input,
+} from '@angular/core';
 import type { Meal } from '@org/shared-types';
+
+import { CartStore } from '../../features/cart/cart.store';
 
 @Component({
   selector: 'app-meal-card-details',
@@ -36,6 +43,8 @@ import type { Meal } from '@org/shared-types';
           </span>
           <button
             type="button"
+            data-meal-add
+            (click)="addToCart()"
             class="rounded bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
           >
             Add
@@ -46,5 +55,16 @@ import type { Meal } from '@org/shared-types';
   `,
 })
 export class MealCardDetailsComponent {
+  private readonly cart = inject(CartStore);
   readonly meal = input.required<Meal>();
+
+  addToCart(): void {
+    const m = this.meal();
+    this.cart.addItem({
+      mealId: m.id,
+      name: m.name,
+      priceCents: m.priceCents,
+      imageUrl: m.imageUrl,
+    });
+  }
 }
