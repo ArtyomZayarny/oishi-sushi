@@ -67,5 +67,5 @@ NEEDS_HUMAN.md
 
 # Acceptance iteration artifacts — big screenshots + HARs.
 # iter-accept-1 is committed once as evidence of the §10 workflow; future runs are ignored.
-iter-[0-9]*/
+iter-*/
 !iter-accept-1/
