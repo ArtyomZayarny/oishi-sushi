@@ -5,6 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express from 'express';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,16 +16,33 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
+ * Proxy /api/* and /socket.io/* to the backend.
+ * Mirrors apps/web/proxy.conf.json (which only affects `ng serve` dev-server)
+ * so that the compiled SSR server behaves the same at runtime.
  *
- * Example:
- * ```ts
- * app.get('/api/**', (req, res) => {
- *   // Handle API request
- * });
- * ```
+ * Express mount at '/api' strips the prefix, so target must include '/api' to
+ * land on NestJS's global prefix. socket.io uses a non-prefixed path.
  */
+const apiOrigin =
+  process.env['API_PROXY_TARGET']?.replace(/\/+$/, '') ||
+  'http://localhost:3000';
+
+app.use(
+  '/api',
+  createProxyMiddleware({
+    target: `${apiOrigin}/api`,
+    changeOrigin: true,
+  }),
+);
+
+app.use(
+  '/socket.io',
+  createProxyMiddleware({
+    target: apiOrigin,
+    changeOrigin: true,
+    ws: true,
+  }),
+);
 
 /**
  * Serve static files from /browser

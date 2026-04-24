@@ -64,3 +64,8 @@ playwright/.cache
 # Overnight loop artifacts (not core code — don't push logs)
 .claude/logs/
 NEEDS_HUMAN.md
+
+# Acceptance iteration artifacts — big screenshots + HARs.
+# iter-accept-1 is committed once as evidence of the §10 workflow; future runs are ignored.
+iter-[0-9]*/
+!iter-accept-1/
