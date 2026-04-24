@@ -44,7 +44,7 @@ model Meal {
   name        String       @unique
   description String
   priceCents  Int
-  imageUrl    String
+  imageUrl    String?
   active      Boolean      @default(true)
   deletedAt   DateTime?
   categoryId  String

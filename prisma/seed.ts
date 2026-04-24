@@ -6,6 +6,15 @@ import * as bcrypt from 'bcryptjs';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
+const CANONICAL_MEAL_NAMES = [
+  'Otoro Selection',
+  "Chef's Omakase",
+  'Toro Truffle Roll',
+  'Sashimi Moriawase',
+  'Ikura Don',
+  "Couple's Set",
+] as const;
+
 async function main() {
   const adminHash = await bcrypt.hash('demo-admin-pass', 12);
   const customerHash = await bcrypt.hash('demo-customer-pass', 12);
@@ -33,82 +42,133 @@ async function main() {
     },
   });
 
+  // Soft-delete any meal whose name isn't in the canonical set. Safe across
+  // re-runs (no-op when everything already aligned).
+  await prisma.meal.updateMany({
+    where: {
+      name: { notIn: CANONICAL_MEAL_NAMES as unknown as string[] },
+      active: true,
+    },
+    data: { active: false, deletedAt: new Date() },
+  });
+
   const maki = await prisma.category.upsert({
     where: { slug: 'maki' },
-    update: {},
+    update: { name: 'Maki', sortOrder: 1 },
     create: { name: 'Maki', slug: 'maki', sortOrder: 1 },
   });
   const nigiri = await prisma.category.upsert({
     where: { slug: 'nigiri' },
-    update: {},
+    update: { name: 'Nigiri', sortOrder: 2 },
     create: { name: 'Nigiri', slug: 'nigiri', sortOrder: 2 },
   });
-  const special = await prisma.category.upsert({
-    where: { slug: 'special-rolls' },
-    update: {},
-    create: { name: 'Special Rolls', slug: 'special-rolls', sortOrder: 3 },
+  const omakase = await prisma.category.upsert({
+    where: { slug: 'omakase' },
+    update: { name: 'Omakase', sortOrder: 3 },
+    create: { name: 'Omakase', slug: 'omakase', sortOrder: 3 },
+  });
+  const sashimi = await prisma.category.upsert({
+    where: { slug: 'sashimi' },
+    update: { name: 'Sashimi', sortOrder: 4 },
+    create: { name: 'Sashimi', slug: 'sashimi', sortOrder: 4 },
+  });
+  const donburi = await prisma.category.upsert({
+    where: { slug: 'donburi' },
+    update: { name: 'Donburi', sortOrder: 5 },
+    create: { name: 'Donburi', slug: 'donburi', sortOrder: 5 },
+  });
+  const sets = await prisma.category.upsert({
+    where: { slug: 'sets' },
+    update: { name: 'Sets', sortOrder: 6 },
+    create: { name: 'Sets', slug: 'sets', sortOrder: 6 },
   });
 
   const meals = [
     {
-      name: 'Salmon Maki',
-      description: 'Fresh salmon, rice, nori. 6 pcs.',
-      priceCents: 890,
-      imageUrl: '/assets/meals/salmon-maki.jpg',
-      categoryId: maki.id,
-      allergens: ['fish'],
-    },
-    {
-      name: 'Tuna Maki',
-      description: 'Bluefin tuna, rice, nori. 6 pcs.',
-      priceCents: 990,
-      imageUrl: '/assets/meals/tuna-maki.jpg',
-      categoryId: maki.id,
-      allergens: ['fish'],
-    },
-    {
-      name: 'Salmon Nigiri',
-      description: 'Hand-pressed rice with salmon slice. 2 pcs.',
-      priceCents: 650,
-      imageUrl: '/assets/meals/salmon-nigiri.jpg',
+      name: 'Otoro Selection',
+      description:
+        'Five-day aged bluefin belly, hand-cut nigiri, eight pieces.',
+      priceCents: 4800,
+      imageUrl: null,
       categoryId: nigiri.id,
       allergens: ['fish'],
     },
     {
-      name: 'Ebi Nigiri',
-      description: 'Cooked shrimp on rice. 2 pcs.',
-      priceCents: 590,
-      imageUrl: '/assets/meals/ebi-nigiri.jpg',
-      categoryId: nigiri.id,
-      allergens: ['shellfish'],
+      name: "Chef's Omakase",
+      description:
+        'Twelve pieces chosen by our chef each morning, cold-chain delivery.',
+      priceCents: 9500,
+      imageUrl: null,
+      categoryId: omakase.id,
+      allergens: ['fish', 'shellfish'],
     },
     {
-      name: 'Dragon Roll',
-      description: 'Eel, avocado, tempura crunch. 8 pcs.',
-      priceCents: 1490,
-      imageUrl: '/assets/meals/dragon-roll.jpg',
-      categoryId: special.id,
-      allergens: ['fish', 'gluten'],
+      name: 'Toro Truffle Roll',
+      description: 'Fatty tuna, shaved black truffle, micro shiso, gold leaf.',
+      priceCents: 3800,
+      imageUrl: null,
+      categoryId: maki.id,
+      allergens: ['fish'],
     },
     {
-      name: 'Rainbow Roll',
-      description: 'California roll topped with assorted sashimi. 8 pcs.',
-      priceCents: 1590,
-      imageUrl: '/assets/meals/rainbow-roll.jpg',
-      categoryId: special.id,
+      name: 'Sashimi Moriawase',
+      description:
+        "Seven cuts of the morning's best — hamachi, uni, kanpachi, and more.",
+      priceCents: 7200,
+      imageUrl: null,
+      categoryId: sashimi.id,
+      allergens: ['fish', 'shellfish'],
+    },
+    {
+      name: 'Ikura Don',
+      description: 'Salmon roe cured in soy and sake over warm vinegared rice.',
+      priceCents: 3200,
+      imageUrl: null,
+      categoryId: donburi.id,
+      allergens: ['fish', 'soy'],
+    },
+    {
+      name: "Couple's Set",
+      description:
+        'Twenty pieces for two, balanced across nigiri, maki, and sashimi.',
+      priceCents: 12800,
+      imageUrl: null,
+      categoryId: sets.id,
       allergens: ['fish', 'shellfish'],
     },
   ];
 
   for (const m of meals) {
+    const { categoryId, ...rest } = m;
     await prisma.meal.upsert({
       where: { name: m.name },
-      update: {},
-      create: m,
+      update: {
+        description: rest.description,
+        priceCents: rest.priceCents,
+        imageUrl: rest.imageUrl,
+        category: { connect: { id: categoryId } },
+        allergens: rest.allergens,
+        active: true,
+        deletedAt: null,
+      },
+      create: {
+        name: rest.name,
+        description: rest.description,
+        priceCents: rest.priceCents,
+        imageUrl: rest.imageUrl,
+        allergens: rest.allergens,
+        category: { connect: { id: categoryId } },
+      },
     });
   }
 
-  console.log(`Seed complete: 2 users, 3 categories, ${meals.length} meals.`);
+  // Legacy categories whose only meals are soft-deleted cannot be hard-deleted
+  // without breaking the FK on OrderItem history. The public menu API filters
+  // to active meals, so an empty category sits inert and invisible to users.
+
+  console.log(
+    `Seed complete: 2 users, 6+ categories (inert legacy kept), ${meals.length} active meals.`,
+  );
 }
 
 main()
