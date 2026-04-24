@@ -8,11 +8,11 @@ const prisma = new PrismaClient({ adapter });
 
 const CANONICAL_MEAL_NAMES = [
   'Otoro Selection',
-  "Chef's Omakase",
+  'Chef’s Omakase',
   'Toro Truffle Roll',
   'Sashimi Moriawase',
   'Ikura Don',
-  "Couple's Set",
+  'Couple’s Set',
 ] as const;
 
 async function main() {
@@ -94,7 +94,7 @@ async function main() {
       allergens: ['fish'],
     },
     {
-      name: "Chef's Omakase",
+      name: 'Chef’s Omakase',
       description:
         'Twelve pieces chosen by our chef each morning, cold-chain delivery.',
       priceCents: 9500,
@@ -128,7 +128,7 @@ async function main() {
       allergens: ['fish', 'soy'],
     },
     {
-      name: "Couple's Set",
+      name: 'Couple’s Set',
       description:
         'Twenty pieces for two, balanced across nigiri, maki, and sashimi.',
       priceCents: 12800,

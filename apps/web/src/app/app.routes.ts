@@ -7,11 +7,11 @@ import { LoginComponent } from './pages/login/login.component';
 import { menuResolver } from './pages/menu/menu.resolver';
 
 export const appRoutes: Route[] = [
+  { path: '', pathMatch: 'full', component: HomeComponent },
   {
     path: '',
     component: AppLayoutComponent,
     children: [
-      { path: '', pathMatch: 'full', component: HomeComponent },
       { path: 'auth/login', component: LoginComponent },
       {
         path: 'menu',

@@ -11,7 +11,7 @@ export interface Meal {
   name: string;
   description: string;
   priceCents: number;
-  imageUrl: string;
+  imageUrl: string | null;
   active: boolean;
   deletedAt: string | Date | null;
   categoryId: string;
