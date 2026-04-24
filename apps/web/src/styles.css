@@ -2,4 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* You can add global styles to this file, and also import other style files */
+/* Homepage dark-editorial palette — scoped to .canvas to avoid leaking onto
+   other routes. Promote to :root when a site-wide dark theme is desired. */
+.canvas {
+  --canvas: #0a0a0a;
+  --card-lifted: #14110d;
+  --outer-border: #1f1d1a;
+  --hairline: #2a2723;
+  --text-primary: #f5f1ea;
+  --text-secondary: #8a8279;
+  --amber: #d4803a;
+  --amber-bright: #e89550;
+  --photo-umber: #3d2f1f;
+  --photo-sepia: #4a3a28;
+  --photo-stone: #2e2820;
+
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.canvas .font-display {
+  font-family: 'Fraunces', 'Georgia', serif;
+}
+
+.canvas .tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.canvas .photo-fill-umber {
+  background-color: var(--photo-umber);
+}
+.canvas .photo-fill-sepia {
+  background-color: var(--photo-sepia);
+}
+.canvas .photo-fill-stone {
+  background-color: var(--photo-stone);
+}
