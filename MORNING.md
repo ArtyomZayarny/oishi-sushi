@@ -54,8 +54,24 @@ cb8e78e             feat(13-polish): README + CI workflow + screenshots + missin
 
 - `iter-accept-1/` — retained this time as evidence of the §10 workflow. Future runs should gitignore `iter-*/` (already added).
 
-## Next recommended action
+## Post-loop cleanup — 2026-04-24 ~07:55 local
 
-1. Review the proxy fix commit (`apps/web/src/server.ts`) — approve or request alternatives (e.g., reverse-proxy in deploy instead of app code).
-2. Wire CUJ-2 + CUJ-3 into a throwaway "phase-14-cuj-sanity" pass to fully close the §10 gap retroactively.
-3. For next overnight build: `acceptance/cujs.md` + `## Acceptance` blocks per phase are now mandatory (per §10). The overnight-loop template already gates on them at step 6b.
+Executed `plans/post-loop-cleanup-2026-04-24.md`. All three items closed:
+
+- **Item 1 (meal images): DONE** — commit `f057eee`. 6 × 400×300 Unsplash JPEGs mapped into `apps/web/public/assets/meals/`. Build succeeds, assets bundle into `dist/apps/web/browser/assets/meals/`.
+- **Item 2 (CUJ-2): PASS** — commit `7d6ffed`. Login → `/admin` → 6 meal rows with images rendering. Full report in `iter-accept-2/acceptance/cuj-2-report.md`. One doc fix: CUJ-2 spec said `/admin/meals` but actual route is `/admin`; `acceptance/cujs.md` updated.
+- **Item 3 (CUJ-3): PASS** — commit pending. Customer creates order, admin PATCHes status, customer's browser flips badge PENDING → PREPARING in ≤5s without reload. Full report in `iter-accept-3/acceptance/cuj-3-report.md`.
+
+### Second bug caught by the §10 acceptance workflow (and fixed during iter-accept-3)
+
+Running CUJ-3 surfaced a structurally identical bug to the one iter-accept-1 found: the SSR server's `/socket.io` proxy was mounted with `target: apiOrigin` instead of `target: ${apiOrigin}/socket.io`. Express strips the mount prefix, so Engine.IO polling hit `/?EIO=4...` on the backend and 404'd. Unit tests (192 green) never touched it because `server.ts` is bootstrap config. Fix is a one-line change, symmetric to the `/api` fix from commit `2f949a4`.
+
+**Two consecutive retroactive CUJ passes → two proxy bugs fixed.** This concretely validates §10: "code-green ≠ product-works". Worth capturing the pattern (`http-proxy-middleware` at a prefix that matches the backend's path → target MUST include that prefix) in the project's docs for any future proxy routes.
+
+### /auth/me 401 "noise" — investigated, not actionable
+
+MORNING.md's top section listed `GET /api/auth/me → 401` as "console noise". Investigated in post-loop pass: the error interceptor at `apps/web/src/app/interceptors/error.interceptor.ts:18` already skips 401 for `/auth/me` and `/auth/login` via `isAuthProbe()`, and `auth.service.ts:28–38` swallows the error silently. The "noise" is Chrome DevTools' auto-red-row in the Network panel for any 4xx response — unsuppressable from app code. Not a bug; expected guest-probe behavior.
+
+## Status
+
+All three CUJs in `acceptance/cujs.md` now green. Portfolio app is demo-ready.

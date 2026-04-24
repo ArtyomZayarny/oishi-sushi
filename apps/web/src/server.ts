@@ -38,7 +38,10 @@ app.use(
 app.use(
   '/socket.io',
   createProxyMiddleware({
-    target: apiOrigin,
+    // Express mount at '/socket.io' strips the prefix before the request
+    // reaches the proxy, so the target must include '/socket.io' to land on
+    // NestJS's socket.io namespace. Same fix pattern as the /api proxy above.
+    target: `${apiOrigin}/socket.io`,
     changeOrigin: true,
     ws: true,
   }),
