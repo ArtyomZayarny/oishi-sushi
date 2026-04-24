@@ -9,7 +9,7 @@
 - **Seeded users:**
   - Admin: `admin@oishi.dev` / `demo-admin-pass`
   - Customer: `customer@oishi.dev` / `demo-customer-pass`
-- **Seeded meals:** 6 across 3 categories (Salmon Maki, Tuna Maki, Salmon Nigiri, Ebi Nigiri, Dragon Roll, Rainbow Roll). Seed is idempotent via `pnpm db:seed`.
+- **Seeded meals:** 6 across 6 categories (Otoro Selection $48, Chef's Omakase $95, Toro Truffle Roll $38, Sashimi Moriawase $72, Ikura Don $32, Couple's Set $128). Seed is idempotent via `pnpm db:seed`; stale meals from prior seeds are soft-deleted automatically.
 - **Viewport:** `1440×900` desktop only (portfolio demo; mobile is nice-to-have).
 
 ## Readiness (run before any CUJ)
@@ -32,12 +32,12 @@
 1. Navigate to `http://localhost:4000/menu`
    - ASSERT: HTTP 200
    - ASSERT: page source (SSR, before JS boots) contains `data-meal` attributes (≥6)
-   - ASSERT: visible text "Salmon Maki" (seeded meal name)
-2. Click the "Add to cart" button on `Salmon Maki`
+   - ASSERT: visible text "Otoro Selection" (seeded meal name)
+2. Click the "Add to cart" button on `Otoro Selection`
    - ASSERT: cart badge in header updates to `1`
 3. Navigate to `/cart`
-   - ASSERT: page lists `Salmon Maki` with quantity `1`
-   - ASSERT: subtotal renders (`$8.90` for 1× Salmon Maki)
+   - ASSERT: page lists `Otoro Selection` with quantity `1`
+   - ASSERT: subtotal renders (`$48.00` for 1× Otoro Selection)
 
 **Artifacts (per iteration):**
 
@@ -82,7 +82,7 @@
 
 **Steps + assertions:**
 
-1. Context A (customer): login as `customer@oishi.dev`, create an order via `POST /api/orders` with a cart of 1× Salmon Maki. Capture `order.id`.
+1. Context A (customer): login as `customer@oishi.dev`, create an order via `POST /api/orders` with a cart of 1× Otoro Selection. Capture `order.id`.
    - ASSERT: response 201 with `status: "PENDING"`
 2. Context A: navigate to `/orders/<id>` in browser
    - ASSERT: status badge visible showing "PENDING"
@@ -97,6 +97,35 @@
 - `iter-<N>/acceptance/cuj-3-step-2-pending.png`
 - `iter-<N>/acceptance/cuj-3-step-4-preparing.png`
 - `iter-<N>/acceptance/cuj-3-network.har`
+
+---
+
+## CUJ-4: Homepage — single-viewport spec layout at 1440×900
+
+**Persona:** first-time visitor landing on `/`
+**Goal:** confirm the design spec (`docs/ui-design.md`) is realized: dark editorial canvas, three bands, 6 meal cards in spec order, sommelier input, no scroll
+**Preconditions:** seeded DB (6 canonical meals), services up
+
+**Steps + assertions:**
+
+1. Navigate to `http://localhost:4000/` at viewport `1440×900`
+   - ASSERT: HTTP 200
+   - ASSERT: wordmark "OISHI" visible; amber diamond visible; secondary "SUSHI" visible
+   - ASSERT: section meta "— TODAY'S SELECTION" visible in amber
+   - ASSERT: exactly 6 `<app-menu-card>` elements
+   - ASSERT: meal names in order: Otoro Selection, Chef's Omakase, Toro Truffle Roll, Sashimi Moriawase, Ikura Don, Couple's Set (typographic apostrophes per spec §5.5)
+   - ASSERT: sommelier input visible with placeholder starting `"Ask Kenji — what's freshest"`
+   - ASSERT: neither `documentElement.scrollHeight > clientHeight + 1` (no vertical scrollbar)
+2. Click the "+" button on the first card (Otoro Selection)
+   - ASSERT: cart badge appears in header showing `1`
+3. Capture full-page screenshot for manual design review
+
+**Artifacts (per iteration):**
+
+- `iter-<N>/acceptance/cuj-4-home-1440x900.png`
+- `iter-<N>/acceptance/cuj-4-console.log`
+
+**Run via:** `pnpm nx e2e web-e2e --grep homepage`
 
 ---
 

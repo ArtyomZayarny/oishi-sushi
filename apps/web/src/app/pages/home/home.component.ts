@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   signal,
 } from '@angular/core';
@@ -68,7 +69,7 @@ interface ResolvedCard {
       </div>
     } @else {
       <main
-        class="relative mx-auto h-[900px] w-[1440px] border border-[var(--outer-border)]"
+        class="relative mx-auto h-[900px] w-[1440px] shadow-[inset_0_0_0_1px_var(--outer-border)]"
         aria-label="Oishi Sushi home"
       >
         <!-- Band 1: Header (0 → 56) -->
@@ -226,6 +227,7 @@ export class HomeComponent {
   });
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       if (typeof window === 'undefined' || !window.matchMedia) return;
       const mq = window.matchMedia('(max-width: 1199px)');
@@ -233,6 +235,20 @@ export class HomeComponent {
       mq.addEventListener('change', (e) =>
         this.viewportTooSmall.set(e.matches),
       );
+
+      // Spec §1: homepage is a no-scroll single viewport. Suppress page-level
+      // scroll while the homepage is mounted; restore prior styles on destroy
+      // so routing away to /menu etc. doesn't trap the user in overflow:hidden.
+      const html = document.documentElement;
+      const body = document.body;
+      const prevHtml = html.style.overflow;
+      const prevBody = body.style.overflow;
+      html.style.overflow = 'hidden';
+      body.style.overflow = 'hidden';
+      destroyRef.onDestroy(() => {
+        html.style.overflow = prevHtml;
+        body.style.overflow = prevBody;
+      });
     });
   }
 
