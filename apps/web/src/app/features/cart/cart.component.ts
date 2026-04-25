@@ -8,14 +8,18 @@ import { CartStore } from './cart.store';
   imports: [CurrencyPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section data-cart class="py-8">
-      <header class="mb-6 flex items-baseline justify-between">
-        <h1 class="text-3xl font-bold tracking-tight">Your cart</h1>
+    <section data-cart>
+      <header class="mb-8 flex items-baseline justify-between">
+        <h1
+          class="font-display text-[32px] font-light tracking-[-0.01em] text-[var(--text-primary)] sm:text-[40px]"
+        >
+          Your cart
+        </h1>
         @if (store.totalQuantity() > 0) {
           <button
             type="button"
             data-clear
-            class="text-sm text-slate-500 underline hover:text-slate-900"
+            class="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)] transition-colors hover:text-[var(--amber)]"
             (click)="store.clearCart()"
           >
             Clear cart
@@ -24,23 +28,29 @@ import { CartStore } from './cart.store';
       </header>
 
       @if (store.items().length) {
-        <ul class="divide-y divide-slate-200 rounded border border-slate-200">
+        <ul class="flex flex-col gap-3 sm:gap-4">
           @for (item of store.items(); track item.mealId) {
             <li
               data-cart-item
               [attr.data-meal-id]="item.mealId"
-              class="flex items-center gap-4 p-4"
+              class="flex items-center gap-4 rounded-[2px] border border-[var(--hairline)] bg-[var(--card-lifted)] p-3 sm:p-4"
             >
               @if (item.imageUrl) {
                 <img
                   [src]="item.imageUrl"
                   [alt]="item.name"
-                  class="h-14 w-14 rounded object-cover"
+                  class="h-16 w-16 shrink-0 rounded-[2px] object-cover sm:h-20 sm:w-20"
                 />
               }
-              <div class="flex-1">
-                <p class="font-medium text-slate-900">{{ item.name }}</p>
-                <p class="text-sm text-slate-500">
+              <div class="min-w-0 flex-1">
+                <p
+                  class="font-display truncate text-[16px] font-light leading-tight tracking-[-0.01em] text-[var(--text-primary)] sm:text-[18px]"
+                >
+                  {{ item.name }}
+                </p>
+                <p
+                  class="font-display tabular mt-1 text-[14px] font-medium text-[var(--amber)]"
+                >
                   {{ item.priceCents / 100 | currency: 'USD' }}
                 </p>
               </div>
@@ -48,18 +58,23 @@ import { CartStore } from './cart.store';
                 <button
                   type="button"
                   data-dec
-                  class="h-8 w-8 rounded border border-slate-300 text-slate-700 hover:bg-slate-100"
+                  aria-label="Decrease quantity"
+                  class="h-9 w-9 rounded-[2px] border border-[var(--hairline)] text-[16px] text-[var(--text-primary)] transition-colors hover:border-[var(--amber)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
                   (click)="store.updateQty(item.mealId, item.quantity - 1)"
                 >
                   −
                 </button>
-                <span data-qty class="w-8 text-center font-medium">
+                <span
+                  data-qty
+                  class="font-display tabular w-6 text-center text-[14px] font-medium text-[var(--text-primary)]"
+                >
                   {{ item.quantity }}
                 </span>
                 <button
                   type="button"
                   data-inc
-                  class="h-8 w-8 rounded border border-slate-300 text-slate-700 hover:bg-slate-100"
+                  aria-label="Increase quantity"
+                  class="h-9 w-9 rounded-[2px] border border-[var(--hairline)] text-[16px] text-[var(--text-primary)] transition-colors hover:border-[var(--amber)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
                   (click)="store.updateQty(item.mealId, item.quantity + 1)"
                 >
                   +
@@ -67,7 +82,7 @@ import { CartStore } from './cart.store';
                 <button
                   type="button"
                   data-remove
-                  class="ml-2 text-sm text-slate-500 underline hover:text-slate-900"
+                  class="ml-2 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)] transition-colors hover:text-[var(--amber)]"
                   (click)="store.removeItem(item.mealId)"
                 >
                   Remove
@@ -78,23 +93,38 @@ import { CartStore } from './cart.store';
         </ul>
 
         <dl
-          class="mt-6 grid gap-1 rounded border border-slate-200 bg-slate-50 p-4 text-sm"
+          class="mt-8 rounded-[2px] border border-[var(--hairline)] bg-[var(--card-lifted)] p-5 sm:p-6"
         >
-          <div class="flex justify-between">
-            <dt class="text-slate-500">Subtotal</dt>
-            <dd data-subtotal class="font-medium">
+          <div class="flex items-baseline justify-between text-[12px]">
+            <dt class="text-[var(--text-secondary)]">Subtotal</dt>
+            <dd
+              data-subtotal
+              class="font-display tabular text-[var(--text-primary)]"
+            >
               {{ store.subtotalCents() / 100 | currency: 'USD' }}
             </dd>
           </div>
-          <div class="flex justify-between">
-            <dt class="text-slate-500">Tax (15%)</dt>
-            <dd data-tax class="font-medium">
+          <div class="mt-2 flex items-baseline justify-between text-[12px]">
+            <dt class="text-[var(--text-secondary)]">Tax (15%)</dt>
+            <dd
+              data-tax
+              class="font-display tabular text-[var(--text-primary)]"
+            >
               {{ store.taxCents() / 100 | currency: 'USD' }}
             </dd>
           </div>
-          <div class="flex justify-between border-t border-slate-200 pt-2">
-            <dt class="text-base font-semibold text-slate-900">Total</dt>
-            <dd data-grand-total class="text-base font-semibold text-slate-900">
+          <div
+            class="mt-4 flex items-baseline justify-between border-t border-[var(--hairline)] pt-4"
+          >
+            <dt
+              class="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--amber)]"
+            >
+              — Total
+            </dt>
+            <dd
+              data-grand-total
+              class="font-display tabular text-[20px] font-medium text-[var(--amber)] sm:text-[22px]"
+            >
               {{ store.grandTotalCents() / 100 | currency: 'USD' }}
             </dd>
           </div>
@@ -102,7 +132,7 @@ import { CartStore } from './cart.store';
       } @else {
         <p
           data-empty
-          class="rounded border border-dashed border-slate-300 p-6 text-center text-slate-500"
+          class="rounded-[2px] border border-dashed border-[var(--hairline)] p-8 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--text-secondary)]"
         >
           Your cart is empty. Browse the menu to add items.
         </p>

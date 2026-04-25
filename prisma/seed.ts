@@ -89,7 +89,7 @@ async function main() {
       description:
         'Five-day aged bluefin belly, hand-cut nigiri, eight pieces.',
       priceCents: 4800,
-      imageUrl: null,
+      imageUrl: '/assets/meals/otoro-selection.jpg',
       categoryId: nigiri.id,
       allergens: ['fish'],
     },
@@ -98,7 +98,7 @@ async function main() {
       description:
         'Twelve pieces chosen by our chef each morning, cold-chain delivery.',
       priceCents: 9500,
-      imageUrl: null,
+      imageUrl: '/assets/meals/chefs-omakase.jpg',
       categoryId: omakase.id,
       allergens: ['fish', 'shellfish'],
     },
@@ -106,7 +106,7 @@ async function main() {
       name: 'Toro Truffle Roll',
       description: 'Fatty tuna, shaved black truffle, micro shiso, gold leaf.',
       priceCents: 3800,
-      imageUrl: null,
+      imageUrl: '/assets/meals/toro-truffle-roll.jpg',
       categoryId: maki.id,
       allergens: ['fish'],
     },
@@ -115,7 +115,7 @@ async function main() {
       description:
         "Seven cuts of the morning's best — hamachi, uni, kanpachi, and more.",
       priceCents: 7200,
-      imageUrl: null,
+      imageUrl: '/assets/meals/sashimi-moriawase.jpg',
       categoryId: sashimi.id,
       allergens: ['fish', 'shellfish'],
     },
@@ -123,7 +123,7 @@ async function main() {
       name: 'Ikura Don',
       description: 'Salmon roe cured in soy and sake over warm vinegared rice.',
       priceCents: 3200,
-      imageUrl: null,
+      imageUrl: '/assets/meals/ikura-don.jpg',
       categoryId: donburi.id,
       allergens: ['fish', 'soy'],
     },
@@ -132,7 +132,7 @@ async function main() {
       description:
         'Twenty pieces for two, balanced across nigiri, maki, and sashimi.',
       priceCents: 12800,
-      imageUrl: null,
+      imageUrl: '/assets/meals/couples-set.jpg',
       categoryId: sets.id,
       allergens: ['fish', 'shellfish'],
     },

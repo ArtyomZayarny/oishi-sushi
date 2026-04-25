@@ -60,6 +60,11 @@ test-output
 # Playwright
 playwright-report
 playwright/.cache
+.playwright-mcp/
+
+# Ad-hoc debug screenshots dropped at repo root by Playwright sessions
+/*.png
+/*.jpg
 
 # Overnight loop artifacts (not core code — don't push logs)
 .claude/logs/

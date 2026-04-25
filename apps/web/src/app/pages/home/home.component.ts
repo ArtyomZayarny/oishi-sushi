@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { LucideAngularModule, ShoppingBag } from 'lucide-angular';
+import { LucideAngularModule, Menu, ShoppingBag, X } from 'lucide-angular';
 
 import { CartStore } from '../../features/cart/cart.store';
 import {
@@ -59,22 +59,147 @@ interface ResolvedCard {
     SommelierInputComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'canvas block min-h-screen' },
+  host: {
+    class: 'canvas block min-h-[100dvh] w-screen',
+  },
+  styles: [
+    `
+      .canvas-fit {
+        transform: translate(-50%, -50%);
+        transform-origin: center;
+      }
+    `,
+  ],
   template: `
-    @if (viewportTooSmall()) {
-      <div
-        class="fixed inset-0 grid place-items-center p-8 text-center text-sm text-[var(--text-secondary)]"
-      >
-        Oishi Sushi is desktop-only for now. Please switch to a desktop browser.
+    @if (isDesktop()) {
+      <div class="fixed inset-0 overflow-hidden">
+        <main
+          class="canvas-fit absolute left-1/2 top-1/2 h-[900px] w-[1440px] shadow-[inset_0_0_0_1px_var(--outer-border)]"
+          [style.transform]="canvasTransform()"
+          aria-label="Oishi Sushi home"
+        >
+          <!-- Band 1: Header (0 → 56) -->
+          <header
+            class="flex h-14 items-center border-b border-[var(--hairline)] px-10"
+          >
+            <div class="flex items-baseline gap-2">
+              <span
+                data-wordmark-oishi
+                class="font-display text-[20px] font-medium tracking-[0.15em]"
+              >
+                OISHI
+              </span>
+              <span
+                data-wordmark-diamond
+                aria-hidden="true"
+                class="block h-1.5 w-1.5 rotate-45 self-center bg-[var(--amber)]"
+              ></span>
+              <span
+                data-wordmark-sushi
+                class="text-[10px] font-medium uppercase tracking-[0.2em] text-[var(--text-secondary)]"
+              >
+                SUSHI
+              </span>
+            </div>
+            <nav
+              class="ml-auto flex gap-12 text-[11px] font-medium uppercase tracking-[0.16em]"
+            >
+              <a
+                data-nav-menu
+                routerLink="/menu"
+                class="hover:text-[var(--amber)]"
+              >
+                MENU
+              </a>
+              <button
+                data-nav-story
+                type="button"
+                disabled
+                aria-disabled="true"
+                class="cursor-not-allowed opacity-60"
+              >
+                STORY
+              </button>
+              <button
+                data-nav-delivery
+                type="button"
+                disabled
+                aria-disabled="true"
+                class="cursor-not-allowed opacity-60"
+              >
+                DELIVERY
+              </button>
+            </nav>
+            <a
+              data-cart-link
+              routerLink="/cart"
+              [attr.aria-label]="'Open cart (' + cartCount() + ' items)'"
+              class="ml-10 flex items-center gap-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
+            >
+              <lucide-icon
+                [img]="ShoppingBag"
+                [size]="16"
+                [strokeWidth]="1.25"
+                class="text-[var(--text-primary)]"
+              />
+              @if (cartCount() > 0) {
+                <span
+                  data-cart-badge
+                  class="grid h-4 w-4 place-items-center rounded-full bg-[var(--amber)] text-[10px] font-semibold text-[var(--canvas)]"
+                >
+                  {{ cartCount() }}
+                </span>
+              }
+            </a>
+          </header>
+
+          <!-- Band 2: Menu grid (56 → 780) -->
+          <section class="h-[724px] px-10 pt-10">
+            <span
+              data-section-meta
+              class="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--amber)]"
+            >
+              — TODAY’S SELECTION
+            </span>
+            @if (meals().length === 6) {
+              <div class="mt-6 grid grid-cols-3 gap-5">
+                @for (meal of meals(); track meal.mealId) {
+                  <app-menu-card
+                    [mealId]="meal.mealId"
+                    [label]="meal.label"
+                    [name]="meal.name"
+                    [description]="meal.description"
+                    [priceCents]="meal.priceCents"
+                    [photoFill]="meal.photoFill"
+                    [imageUrl]="meal.imageUrl"
+                    (addToCart)="onAddToCart($event)"
+                  />
+                }
+              </div>
+            } @else {
+              <div
+                data-loading
+                class="mt-6 text-[12px] text-[var(--text-secondary)]"
+              >
+                Loading menu…
+              </div>
+            }
+          </section>
+
+          <!-- Band 3: Sommelier (780 → 900) -->
+          <section
+            class="absolute inset-x-10 bottom-0 h-[120px] border-t border-[var(--hairline)] pt-5"
+          >
+            <app-sommelier-input />
+          </section>
+        </main>
       </div>
     } @else {
-      <main
-        class="relative mx-auto h-[900px] w-[1440px] shadow-[inset_0_0_0_1px_var(--outer-border)]"
-        aria-label="Oishi Sushi home"
+      <div
+        class="mx-auto flex w-full max-w-[768px] flex-col gap-6 px-4 pb-[120px] pt-4 sm:px-6"
       >
-        <!-- Band 1: Header (0 → 56) -->
         <header
-          class="flex h-14 items-center border-b border-[var(--hairline)] px-10"
+          class="flex items-center justify-between border-b border-[var(--hairline)] pb-4"
         >
           <div class="flex items-baseline gap-2">
             <span
@@ -95,60 +220,47 @@ interface ResolvedCard {
               SUSHI
             </span>
           </div>
-          <nav
-            class="ml-auto flex gap-12 text-[11px] font-medium uppercase tracking-[0.16em]"
-          >
+          <div class="flex items-center gap-1">
             <a
-              data-nav-menu
-              routerLink="/menu"
-              class="hover:text-[var(--amber)]"
+              data-cart-link
+              routerLink="/cart"
+              [attr.aria-label]="'Open cart (' + cartCount() + ' items)'"
+              class="flex h-11 items-center gap-2 px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
             >
-              MENU
+              <lucide-icon
+                [img]="ShoppingBag"
+                [size]="18"
+                [strokeWidth]="1.25"
+                class="text-[var(--text-primary)]"
+              />
+              @if (cartCount() > 0) {
+                <span
+                  data-cart-badge
+                  class="grid h-4 w-4 place-items-center rounded-full bg-[var(--amber)] text-[10px] font-semibold text-[var(--canvas)]"
+                >
+                  {{ cartCount() }}
+                </span>
+              }
             </a>
             <button
-              data-nav-story
+              data-nav-toggle
               type="button"
-              disabled
-              aria-disabled="true"
-              class="cursor-not-allowed opacity-60"
+              [attr.aria-label]="mobileNavOpen() ? 'Close menu' : 'Open menu'"
+              [attr.aria-expanded]="mobileNavOpen()"
+              (click)="toggleMobileNav()"
+              class="flex h-11 w-11 items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
             >
-              STORY
+              <lucide-icon
+                [img]="Menu"
+                [size]="20"
+                [strokeWidth]="1.25"
+                class="text-[var(--text-primary)]"
+              />
             </button>
-            <button
-              data-nav-delivery
-              type="button"
-              disabled
-              aria-disabled="true"
-              class="cursor-not-allowed opacity-60"
-            >
-              DELIVERY
-            </button>
-          </nav>
-          <a
-            data-cart-link
-            routerLink="/cart"
-            [attr.aria-label]="'Open cart (' + cartCount() + ' items)'"
-            class="ml-10 flex items-center gap-2.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
-          >
-            <lucide-icon
-              [img]="ShoppingBag"
-              [size]="16"
-              [strokeWidth]="1.25"
-              class="text-[var(--text-primary)]"
-            />
-            @if (cartCount() > 0) {
-              <span
-                data-cart-badge
-                class="grid h-4 w-4 place-items-center rounded-full bg-[var(--amber)] text-[10px] font-semibold text-[var(--canvas)]"
-              >
-                {{ cartCount() }}
-              </span>
-            }
-          </a>
+          </div>
         </header>
 
-        <!-- Band 2: Menu grid (56 → 780) -->
-        <section class="h-[724px] px-10 pt-10">
+        <section>
           <span
             data-section-meta
             class="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--amber)]"
@@ -156,9 +268,10 @@ interface ResolvedCard {
             — TODAY’S SELECTION
           </span>
           @if (meals().length === 6) {
-            <div class="mt-6 grid grid-cols-3 gap-5">
+            <div class="mt-4 flex flex-col gap-3">
               @for (meal of meals(); track meal.mealId) {
                 <app-menu-card
+                  variant="mobile"
                   [mealId]="meal.mealId"
                   [label]="meal.label"
                   [name]="meal.name"
@@ -173,20 +286,81 @@ interface ResolvedCard {
           } @else {
             <div
               data-loading
-              class="mt-6 text-[12px] text-[var(--text-secondary)]"
+              class="mt-4 text-[14px] text-[var(--text-secondary)]"
             >
               Loading menu…
             </div>
           }
         </section>
+      </div>
 
-        <!-- Band 3: Sommelier (780 → 900) -->
-        <section
-          class="absolute inset-x-10 bottom-0 h-[120px] border-t border-[var(--hairline)] pt-5"
+      <div
+        data-sommelier-dock
+        class="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--hairline)] bg-[var(--canvas)] px-4 pt-3 sm:px-6"
+        style="padding-bottom: max(12px, env(safe-area-inset-bottom));"
+      >
+        <app-sommelier-input [variant]="'compact'" />
+      </div>
+
+      <aside
+        data-mobile-nav
+        [class.translate-x-0]="mobileNavOpen()"
+        [class.translate-x-full]="!mobileNavOpen()"
+        [attr.aria-hidden]="!mobileNavOpen()"
+        class="fixed inset-0 z-30 bg-[var(--canvas)] transition-transform duration-200 ease-out"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Main menu"
+      >
+        <div
+          class="flex h-14 items-center justify-end border-b border-[var(--hairline)] px-4"
         >
-          <app-sommelier-input />
-        </section>
-      </main>
+          <button
+            data-nav-close
+            type="button"
+            aria-label="Close menu"
+            (click)="closeMobileNav()"
+            class="flex h-11 w-11 items-center justify-center focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--amber-bright)]"
+          >
+            <lucide-icon
+              [img]="X"
+              [size]="20"
+              [strokeWidth]="1.25"
+              class="text-[var(--text-primary)]"
+            />
+          </button>
+        </div>
+        <nav
+          class="flex flex-col gap-2 px-6 py-8 text-[14px] font-medium uppercase tracking-[0.16em]"
+        >
+          <a
+            data-nav-menu
+            routerLink="/menu"
+            (click)="closeMobileNav()"
+            class="py-3 hover:text-[var(--amber)]"
+          >
+            MENU
+          </a>
+          <button
+            data-nav-story
+            type="button"
+            disabled
+            aria-disabled="true"
+            class="cursor-not-allowed py-3 text-left opacity-60"
+          >
+            STORY
+          </button>
+          <button
+            data-nav-delivery
+            type="button"
+            disabled
+            aria-disabled="true"
+            class="cursor-not-allowed py-3 text-left opacity-60"
+          >
+            DELIVERY
+          </button>
+        </nav>
+      </aside>
     }
   `,
 })
@@ -195,9 +369,16 @@ export class HomeComponent {
   private readonly menu = inject(MenuService);
 
   readonly ShoppingBag = ShoppingBag;
+  readonly Menu = Menu;
+  readonly X = X;
 
   readonly cartCount = this.cart.totalQuantity;
-  readonly viewportTooSmall = signal(false);
+  readonly isDesktop = signal(true);
+  readonly mobileNavOpen = signal(false);
+  readonly canvasScale = signal(1);
+  readonly canvasTransform = computed(
+    () => `translate(-50%, -50%) scale(${this.canvasScale()})`,
+  );
 
   private readonly menuData = toSignal(this.menu.list(), {
     initialValue: [] as CategoryWithMeals[],
@@ -227,32 +408,44 @@ export class HomeComponent {
   });
 
   constructor() {
+    if (typeof window !== 'undefined') {
+      this.isDesktop.set(window.innerWidth >= 1200);
+      this.canvasScale.set(this.computeCanvasScale());
+    }
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       if (typeof window === 'undefined' || !window.matchMedia) return;
-      const mq = window.matchMedia('(max-width: 1199px)');
-      this.viewportTooSmall.set(mq.matches);
-      mq.addEventListener('change', (e) =>
-        this.viewportTooSmall.set(e.matches),
-      );
+      const mq = window.matchMedia('(min-width: 1200px)');
+      this.isDesktop.set(mq.matches);
+      const onMq = (e: MediaQueryListEvent) => this.isDesktop.set(e.matches);
+      mq.addEventListener('change', onMq);
 
-      // Spec §1: homepage is a no-scroll single viewport. Suppress page-level
-      // scroll while the homepage is mounted; restore prior styles on destroy
-      // so routing away to /menu etc. doesn't trap the user in overflow:hidden.
-      const html = document.documentElement;
-      const body = document.body;
-      const prevHtml = html.style.overflow;
-      const prevBody = body.style.overflow;
-      html.style.overflow = 'hidden';
-      body.style.overflow = 'hidden';
+      const onResize = () => this.canvasScale.set(this.computeCanvasScale());
+      onResize();
+      window.addEventListener('resize', onResize);
+
       destroyRef.onDestroy(() => {
-        html.style.overflow = prevHtml;
-        body.style.overflow = prevBody;
+        mq.removeEventListener('change', onMq);
+        window.removeEventListener('resize', onResize);
       });
     });
   }
 
+  private computeCanvasScale(): number {
+    const w = window.innerWidth / 1440;
+    const h = window.innerHeight / 900;
+    return Math.min(w, h, 1);
+  }
+
   onAddToCart(payload: AddToCartPayload): void {
     this.cart.addItem(payload);
+  }
+
+  toggleMobileNav(): void {
+    this.mobileNavOpen.update((v) => !v);
+  }
+
+  closeMobileNav(): void {
+    this.mobileNavOpen.set(false);
   }
 }

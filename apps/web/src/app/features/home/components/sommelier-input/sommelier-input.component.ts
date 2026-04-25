@@ -3,6 +3,7 @@ import {
   Component,
   computed,
   inject,
+  input,
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -20,20 +21,25 @@ const DELIVERY_ETA_MIN = 40;
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="block w-full">
-      <div class="mb-4 flex items-baseline gap-[36px]">
-        <span
-          data-label
-          class="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--amber)]"
+      @if (variant() === 'full') {
+        <div
+          class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-9"
         >
-          — SOMMELIER AI
-        </span>
-        <span
-          data-tagline
-          class="text-[11px] italic text-[var(--text-secondary)]"
-        >
-          Ask what’s freshest tonight, what pairs with sake, what to try first.
-        </span>
-      </div>
+          <span
+            data-label
+            class="text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--amber)]"
+          >
+            — SOMMELIER AI
+          </span>
+          <span
+            data-tagline
+            class="text-[11px] italic text-[var(--text-secondary)]"
+          >
+            Ask what’s freshest tonight, what pairs with sake, what to try
+            first.
+          </span>
+        </div>
+      }
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <label for="kenji" class="sr-only">Ask the sommelier</label>
@@ -77,12 +83,14 @@ const DELIVERY_ETA_MIN = 40;
         </div>
       </form>
 
-      <div
-        class="mt-2 flex items-baseline justify-between text-[10px] text-[var(--text-secondary)]"
-      >
-        <span data-meta>{{ metaLine() }}</span>
-        <span data-powered-by>Powered by Oishi AI</span>
-      </div>
+      @if (variant() === 'full') {
+        <div
+          class="mt-2 flex items-baseline justify-between text-[10px] text-[var(--text-secondary)]"
+        >
+          <span data-meta>{{ metaLine() }}</span>
+          <span data-powered-by>Powered by Oishi AI</span>
+        </div>
+      }
     </div>
   `,
 })
@@ -92,6 +100,7 @@ export class SommelierInputComponent {
   readonly ArrowUp = ArrowUp;
   readonly placeholder =
     'Ask Kenji — what’s freshest, what pairs with sake, what should I try first…';
+  readonly variant = input<'full' | 'compact'>('full');
 
   readonly form = new FormGroup({
     query: new FormControl('', { nonNullable: true }),
