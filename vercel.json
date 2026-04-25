@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm nx build web --configuration=production --output-mode=static",
+  "outputDirectory": "dist/apps/web/browser",
+  "installCommand": "pnpm install --frozen-lockfile=false",
+  "framework": null,
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/((?!index\\.csr\\.html).*)",
+      "destination": "/index.csr.html"
+    }
+  ]
+}

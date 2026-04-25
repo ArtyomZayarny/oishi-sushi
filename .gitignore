@@ -74,3 +74,4 @@ NEEDS_HUMAN.md
 # iter-accept-1 is committed once as evidence of the §10 workflow; future runs are ignored.
 iter-*/
 !iter-accept-1/
+.vercel
