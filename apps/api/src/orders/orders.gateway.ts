@@ -14,7 +14,12 @@ import { OrderEvents } from './order-events.service';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:4200', 'http://localhost:4000'],
+    // Env-driven for HTTPS staging/prod; same comma-separated CORS_ORIGINS as
+    // the REST app (apps/api/src/main.ts). Read at module load — process.env is
+    // populated before Nest bootstraps the gateway.
+    origin: (
+      process.env.CORS_ORIGINS ?? 'http://localhost:4200,http://localhost:4000'
+    ).split(','),
     credentials: true,
   },
 })

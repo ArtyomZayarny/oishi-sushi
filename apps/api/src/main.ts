@@ -17,7 +17,9 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:4000'],
+    origin: (
+      process.env.CORS_ORIGINS ?? 'http://localhost:4200,http://localhost:4000'
+    ).split(','),
     credentials: true,
   });
   const port = process.env.PORT || 3000;

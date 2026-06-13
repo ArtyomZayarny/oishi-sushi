@@ -121,6 +121,62 @@ describe('AuthController (integration)', () => {
       expect(res.body.user?.email).toBe(creds.email);
     });
 
+    it('default — cookies are not Secure (COOKIE_SECURE unset)', async () => {
+      const res = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send(creds)
+        .expect(200);
+
+      const raw = res.headers['set-cookie'];
+      const cookies = Array.isArray(raw) ? raw : raw ? [raw] : [];
+      const session = cookies.find((c: string) => c.startsWith('session='));
+      expect(session).toBeDefined();
+      expect(session).not.toMatch(/Secure/i);
+    });
+
+    it('COOKIE_SECURE=true — sets Secure on session + csrf (HTTPS staging)', async () => {
+      const prev = process.env.COOKIE_SECURE;
+      process.env.COOKIE_SECURE = 'true';
+      try {
+        const res = await request(app.getHttpServer())
+          .post('/auth/login')
+          .send(creds)
+          .expect(200);
+
+        const raw = res.headers['set-cookie'];
+        const cookies = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        expect(cookies.find((c: string) => c.startsWith('session='))).toMatch(
+          /Secure/i,
+        );
+        expect(cookies.find((c: string) => c.startsWith('csrf='))).toMatch(
+          /Secure/i,
+        );
+      } finally {
+        if (prev === undefined) delete process.env.COOKIE_SECURE;
+        else process.env.COOKIE_SECURE = prev;
+      }
+    });
+
+    it('COOKIE_SAMESITE override — honored on the session cookie', async () => {
+      const prev = process.env.COOKIE_SAMESITE;
+      process.env.COOKIE_SAMESITE = 'strict';
+      try {
+        const res = await request(app.getHttpServer())
+          .post('/auth/login')
+          .send(creds)
+          .expect(200);
+
+        const raw = res.headers['set-cookie'];
+        const cookies = Array.isArray(raw) ? raw : raw ? [raw] : [];
+        expect(cookies.find((c: string) => c.startsWith('session='))).toMatch(
+          /SameSite=Strict/i,
+        );
+      } finally {
+        if (prev === undefined) delete process.env.COOKIE_SAMESITE;
+        else process.env.COOKIE_SAMESITE = prev;
+      }
+    });
+
     it('401 — wrong password', async () => {
       await request(app.getHttpServer())
         .post('/auth/login')

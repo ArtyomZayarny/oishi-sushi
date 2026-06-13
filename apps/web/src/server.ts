@@ -6,6 +6,7 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { timingSafeEqual } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,6 +15,37 @@ const browserDistFolder = resolve(serverDistFolder, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+
+/**
+ * Ungated health endpoint for platform health checks (Railway). Declared before
+ * the staging password gate below so the probe always gets 200, not 401.
+ */
+app.get('/healthz', (_req, res) => {
+  res.status(200).send('ok');
+});
+
+/**
+ * Optional staging password gate. When STAGING_BASIC_AUTH="user:pass" is set,
+ * every request below (the /api + /socket.io proxies, static assets, and SSR)
+ * requires HTTP Basic auth — keeps the demo URL private and unindexed. Unset in
+ * local/prod, so it is a no-op there.
+ */
+const stagingAuth = process.env['STAGING_BASIC_AUTH'];
+if (stagingAuth) {
+  const expected = Buffer.from(
+    `Basic ${Buffer.from(stagingAuth).toString('base64')}`,
+  );
+  app.use((req, res, next) => {
+    const got = Buffer.from(req.headers.authorization ?? '');
+    // timingSafeEqual throws on unequal lengths, so length-check first.
+    if (got.length === expected.length && timingSafeEqual(got, expected)) {
+      next();
+      return;
+    }
+    res.set('WWW-Authenticate', 'Basic realm="oishi-staging"');
+    res.status(401).send('Authentication required.');
+  });
+}
 
 /**
  * Proxy /api/* and /socket.io/* to the backend.
