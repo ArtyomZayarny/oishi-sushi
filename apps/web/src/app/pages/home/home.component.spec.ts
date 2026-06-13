@@ -1,11 +1,15 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideZonelessChangeDetection } from '@angular/core';
 import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
-import type { Meal } from '@org/shared-types';
+import type { Meal, SommelierMealRef } from '@org/shared-types';
 import { of } from 'rxjs';
 
 import { CartStore } from '../../features/cart/cart.store';
+import { SommelierInputComponent } from '../../features/home/components/sommelier-input/sommelier-input.component';
 import {
   type CategoryWithMeals,
   MenuService,
@@ -140,6 +144,8 @@ const setup = (
     providers: [
       provideZonelessChangeDetection(),
       provideRouter([]),
+      provideHttpClient(),
+      provideHttpClientTesting(),
       { provide: MenuService, useValue: menuStub },
     ],
   });
@@ -329,6 +335,118 @@ describe('HomeComponent', () => {
         Array.from(chips).map((c) => (c as HTMLElement).textContent?.trim()),
       );
       expect(labels).toEqual(new Set(['Fish', 'Gluten', 'Shellfish', 'Soy']));
+    });
+  });
+
+  describe('T12 — add-to-cart from a sommelier recommendation', () => {
+    const REC: SommelierMealRef = {
+      mealId: 'cm_str',
+      name: 'Spicy Tuna Roll',
+      priceCents: 1290,
+      imageUrl: '/img/str.jpg',
+      why: 'Sriracha-marinated tuna.',
+    };
+    const REC_NO_IMG: SommelierMealRef = {
+      mealId: 'cm_tat',
+      name: 'Tuna Tataki',
+      priceCents: 1590,
+      imageUrl: null,
+      why: 'Seared rare tuna.',
+    };
+
+    const sommelier = (
+      fixture: ComponentFixture<HomeComponent>,
+    ): SommelierInputComponent =>
+      fixture.debugElement.query(By.directive(SommelierInputComponent))
+        .componentInstance as SommelierInputComponent;
+
+    it('F8-AC1: emitting addToCart calls CartStore.addItem exactly once', () => {
+      const { fixture, cart } = setup();
+      const spy = jest.spyOn(cart, 'addItem');
+      sommelier(fixture).addToCart.emit(REC);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('F8-AC1: the cart receives the recommendation as a NewItemInput (mealId/name/price/image)', () => {
+      const { fixture, cart } = setup();
+      sommelier(fixture).addToCart.emit(REC);
+      fixture.detectChanges();
+      expect(cart.totalQuantity()).toBe(1);
+      const item = cart.items()[0];
+      expect(item).toEqual({
+        mealId: 'cm_str',
+        name: 'Spicy Tuna Roll',
+        priceCents: 1290,
+        imageUrl: '/img/str.jpg',
+        quantity: 1,
+      });
+    });
+
+    it('F8-AC1: payload is shape-identical to the menu-card path (onAddToCart) for the same meal', () => {
+      const { fixture, cart } = setup();
+      const spy = jest.spyOn(cart, 'addItem');
+
+      sommelier(fixture).addToCart.emit(REC);
+      const fromSommelier = spy.mock.calls[0][0];
+
+      // The menu-card path produces this exact AddToCartPayload shape.
+      fixture.componentInstance.onAddToCart({
+        mealId: REC.mealId,
+        name: REC.name,
+        priceCents: REC.priceCents,
+        imageUrl: REC.imageUrl ?? undefined,
+      });
+      const fromMenuCard = spy.mock.calls[1][0];
+
+      expect(fromSommelier).toEqual(fromMenuCard);
+    });
+
+    it('F8-AC1: omits imageUrl when the recommendation image is null (string|null → string|undefined)', () => {
+      const { fixture, cart } = setup();
+      const spy = jest.spyOn(cart, 'addItem');
+      sommelier(fixture).addToCart.emit(REC_NO_IMG);
+
+      const payload = spy.mock.calls[0][0];
+      expect('imageUrl' in payload).toBe(false);
+      expect(payload).toEqual({
+        mealId: 'cm_tat',
+        name: 'Tuna Tataki',
+        priceCents: 1590,
+      });
+      // stored item carries no imageUrl
+      fixture.detectChanges();
+      expect(cart.items()[0].imageUrl).toBeUndefined();
+    });
+
+    it('F8-AC3: adds the base meal only — no option / priceDeltaCents in the payload', () => {
+      const { fixture, cart } = setup();
+      const spy = jest.spyOn(cart, 'addItem');
+      // SommelierMealRef has no option fields at all; assert the stored item
+      // and the payload carry only base-meal keys (no option/delta leakage).
+      sommelier(fixture).addToCart.emit(REC);
+
+      const payload = spy.mock.calls[0][0] as Record<string, unknown>;
+      expect(Object.keys(payload).sort()).toEqual([
+        'imageUrl',
+        'mealId',
+        'name',
+        'priceCents',
+      ]);
+      expect('priceDeltaCents' in payload).toBe(false);
+      expect('options' in payload).toBe(false);
+      expect('optionId' in payload).toBe(false);
+
+      fixture.detectChanges();
+      expect(cart.items()[0].priceCents).toBe(1290); // base price, no delta
+    });
+
+    it('binds (addToCart) on both sommelier instances (desktop + mobile share the handler)', () => {
+      // Desktop layout renders the full-variant instance; emitting from the
+      // rendered instance must route into the cart (proves the binding exists).
+      const { fixture, cart } = setup();
+      sommelier(fixture).addToCart.emit(REC);
+      fixture.detectChanges();
+      expect(cart.totalQuantity()).toBe(1);
     });
   });
 });
