@@ -1,5 +1,6 @@
 import { Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import type { ConfigType } from '@nestjs/config';
+import { SOMMELIER_CONFIG_DEFAULTS, sommelierConfig } from './sommelier.config';
 import { DailyTokenBudget } from './daily-token-budget.service';
 
 // T2 cost-guard ② + ③ — daily token-budget kill-switch.
@@ -8,12 +9,21 @@ import { DailyTokenBudget } from './daily-token-budget.service';
 //   - Crossing UTC-midnight resets the sum.
 //   - A warn-level log fires once when the day's usage first crosses 50%.
 
+// T3 — the service now takes the typed `sommelier` config (injected via
+// `sommelierConfig.KEY`) rather than the raw `ConfigService`. Construct it with
+// a config object whose `dailyTokenBudget` is the value under test; the other
+// fields are spec defaults (unused by DailyTokenBudget).
 function makeBudget(budget: number): DailyTokenBudget {
-  const config = {
-    get: jest.fn(<T>(_key: string, def?: T): T => def as T),
-  } as unknown as ConfigService;
-  // Force the budget value regardless of the default-passing call style.
-  (config.get as jest.Mock).mockReturnValue(budget);
+  const config: ConfigType<typeof sommelierConfig> = {
+    anthropicApiKey: undefined,
+    hasAnthropicKey: false,
+    model: SOMMELIER_CONFIG_DEFAULTS.model,
+    timeoutMs: SOMMELIER_CONFIG_DEFAULTS.timeoutMs,
+    maxTokens: SOMMELIER_CONFIG_DEFAULTS.maxTokens,
+    throttleLimit: SOMMELIER_CONFIG_DEFAULTS.throttleLimit,
+    globalThrottleLimit: SOMMELIER_CONFIG_DEFAULTS.globalThrottleLimit,
+    dailyTokenBudget: budget,
+  };
   return new DailyTokenBudget(config);
 }
 

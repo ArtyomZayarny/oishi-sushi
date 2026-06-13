@@ -1,19 +1,21 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigType } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { DailyTokenBudgetGuard } from './daily-token-budget.guard';
 import { DailyTokenBudget } from './daily-token-budget.service';
+import { sommelierConfig } from './sommelier.config';
 import { SommelierController } from './sommelier.controller';
 import { SommelierService } from './sommelier.service';
 import { buildSommelierThrottlers } from './sommelier.throttle';
 
-const DEFAULT_IP_LIMIT = 5;
-const DEFAULT_GLOBAL_LIMIT = 40;
-
 /**
- * T2 — sommelier walking skeleton. Wires the throttler (per-IP +
- * app-wide named buckets, limits from config), the daily token-budget
- * kill-switch, and the canned-response controller.
+ * T2 — sommelier walking skeleton; T3 — typed config surface.
+ *
+ * All seven §9 vars are read through one cohesive namespace
+ * (`sommelierConfig`, registered via `ConfigModule.forFeature`). The throttler
+ * factory and {@link DailyTokenBudget} now consume that typed config instead of
+ * scattered `ConfigService.get('SOMMELIER_*')` calls — behaviour is unchanged
+ * (same env vars, same defaults).
  *
  * `ThrottlerModule.forRoot*` configures the throttlers + storage; the
  * `ThrottlerGuard` is applied route-scoped via `@UseGuards` on the controller
@@ -22,18 +24,14 @@ const DEFAULT_GLOBAL_LIMIT = 40;
  */
 @Module({
   imports: [
+    ConfigModule.forFeature(sommelierConfig),
     ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) =>
+      imports: [ConfigModule.forFeature(sommelierConfig)],
+      inject: [sommelierConfig.KEY],
+      useFactory: (config: ConfigType<typeof sommelierConfig>) =>
         buildSommelierThrottlers({
-          ip:
-            config.get<number>('SOMMELIER_THROTTLE_LIMIT', DEFAULT_IP_LIMIT) ??
-            DEFAULT_IP_LIMIT,
-          global:
-            config.get<number>(
-              'SOMMELIER_GLOBAL_THROTTLE_LIMIT',
-              DEFAULT_GLOBAL_LIMIT,
-            ) ?? DEFAULT_GLOBAL_LIMIT,
+          ip: config.throttleLimit,
+          global: config.globalThrottleLimit,
         }),
     }),
   ],

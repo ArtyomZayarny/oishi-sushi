@@ -1,7 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-
-const DEFAULT_DAILY_TOKEN_BUDGET = 500_000;
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { sommelierConfig } from './sommelier.config';
 
 /**
  * T2 cost-guard ②/③ — daily token-budget kill-switch.
@@ -29,12 +28,11 @@ export class DailyTokenBudget {
   private usedToday = 0;
   private warnedHalfToday = false;
 
-  constructor(private readonly config: ConfigService) {
-    this.budget =
-      this.config.get<number>(
-        'SOMMELIER_DAILY_TOKEN_BUDGET',
-        DEFAULT_DAILY_TOKEN_BUDGET,
-      ) ?? DEFAULT_DAILY_TOKEN_BUDGET;
+  constructor(
+    @Inject(sommelierConfig.KEY)
+    config: ConfigType<typeof sommelierConfig>,
+  ) {
+    this.budget = config.dailyTokenBudget;
   }
 
   /** Seam T7 plugs into: record tokens consumed by one model call. */
