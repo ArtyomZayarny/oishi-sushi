@@ -2,17 +2,35 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   input,
   signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import type {
+  SommelierAskResponse,
+  SommelierConfidence,
+} from '@org/shared-types';
 import { ArrowUp, LucideAngularModule } from 'lucide-angular';
 
 import { CartStore } from '../../../../features/cart/cart.store';
+import {
+  SommelierError,
+  SommelierService,
+} from '../../../../services/sommelier.service';
 
-const LOADING_MS = 1500;
 const DELIVERY_ETA_MIN = 40;
+
+/** UI journey states (spec §5 F7). `answer` vs `abstain` is driven by the
+ *  response `confidence`: `'abstain'` ⇒ abstain, otherwise answer. */
+export type SommelierStatus =
+  | 'idle'
+  | 'loading'
+  | 'answer'
+  | 'abstain'
+  | 'error';
 
 @Component({
   selector: 'app-sommelier-input',
@@ -96,6 +114,8 @@ const DELIVERY_ETA_MIN = 40;
 })
 export class SommelierInputComponent {
   private readonly cart = inject(CartStore);
+  private readonly sommelier = inject(SommelierService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly ArrowUp = ArrowUp;
   readonly placeholder =
@@ -105,7 +125,18 @@ export class SommelierInputComponent {
   readonly form = new FormGroup({
     query: new FormControl('', { nonNullable: true }),
   });
-  readonly loading = signal(false);
+
+  /** State machine (spec §5 F7). The template binds `loading`; T11 consumes
+   *  `status` / `response` / `error` to render the answer panel + states. */
+  readonly status = signal<SommelierStatus>('idle');
+  readonly response = signal<SommelierAskResponse | null>(null);
+  readonly error = signal<SommelierError | null>(null);
+  /** True exactly while the HTTP request is in flight (F7-AC1). */
+  readonly loading = computed(() => this.status() === 'loading');
+
+  /** The query backing the current in-flight/last request — retry re-issues
+   *  THIS, not the live input box (F7-AC2). */
+  private lastQuery = '';
 
   readonly metaLine = computed(() => {
     const count = this.cart.totalQuantity();
@@ -121,12 +152,37 @@ export class SommelierInputComponent {
     if (this.loading()) return;
     const query = this.form.controls.query.value.trim();
     if (!query) return;
+    this.run(query);
+  }
 
-    console.info('[sommelier:stub]', query);
-    this.loading.set(true);
-    setTimeout(() => {
-      this.loading.set(false);
-      this.form.reset();
-    }, LOADING_MS);
+  /** Re-issue the same query that failed (F7-AC2). No-op unless in error. */
+  retry(): void {
+    if (this.status() !== 'error') return;
+    if (!this.lastQuery) return;
+    this.run(this.lastQuery);
+  }
+
+  private run(query: string): void {
+    this.lastQuery = query;
+    this.error.set(null);
+    this.status.set('loading');
+
+    this.sommelier
+      .ask({ query })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.response.set(res);
+          this.status.set(this.stateFor(res.confidence));
+        },
+        error: (err: SommelierError) => {
+          this.error.set(err);
+          this.status.set('error');
+        },
+      });
+  }
+
+  private stateFor(confidence: SommelierConfidence): SommelierStatus {
+    return confidence === 'abstain' ? 'abstain' : 'answer';
   }
 }
