@@ -1,10 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import type {
-  SommelierAskResponse,
-  SommelierMealRef,
-  SommelierSource,
-} from '@org/shared-types';
+import type { SommelierAskResponse, SommelierSource } from '@org/shared-types';
 import {
   ANTHROPIC_CLIENT,
   type AnthropicClientProvider,
@@ -17,6 +13,7 @@ import {
 } from './candidates';
 import { SommelierAskDto } from './dto/sommelier-ask.dto';
 import { SOMMELIER_MENU, type MenuPort } from './menu.port';
+import { postValidate } from './post-validate';
 import {
   buildSources,
   buildSystemPrompt,
@@ -74,17 +71,17 @@ export class SommelierService {
    *   5. Call the model (T7 client wrapper) → raw `{answer,picks,confidence}`.
    *   6. `recordUsage(input+output)` — SUCCESS path only (a 503 throws before
    *      here, so no tokens are charged on failure).
-   *   7. Assemble {@link SommelierAskResponse}.
+   *   7. Fail-closed post-validation + assembly via {@link postValidate} (T8).
    *
-   * >>> T8 BOUNDARY <<<  The assembly in {@link assembleResponse} below is the
-   * STRAIGHTFORWARD T7 version: it joins name/priceCents/imageUrl server-side
-   * from the snapshot (the model can never fabricate a meal or price) and maps
-   * picks→recommendations honestly, passing `confidence` THROUGH unchanged. T8
-   * REPLACES it with the hardened fail-closed version — subset check against the
-   * snapshot, allergen re-check vs `excludedIds`, cap at 5, the
-   * `abstain ⟹ recommendations:[]` invariant, the degrade rule, and the
-   * answer-text scan (no excluded names, no URLs, length cap). Until T8 lands,
-   * this version does NOT enforce those invariants.
+   * T8 — fail-closed post-validation (the ENFORCED safety backstop, §4 step 8–9,
+   * §7.4). {@link postValidate} consumes the intermediate + the request-scope
+   * snapshot and enforces, in order: on-menu subset (F5-AC1), allergen re-check
+   * vs `excludedIds` with a `requestId` warn (F4-AC2/3), cap at 5, server-side
+   * name/price/imageUrl join from the snapshot (F5-AC3), the
+   * `abstain ⟹ recommendations:[]` invariant + degrade-to-abstain when every
+   * pick is dropped (F6-AC1), the answer-text scan (no excluded names, no URLs,
+   * ≤600 chars, §7.4), and `[n]` citation consistency (F1-AC4). The model can
+   * never fabricate a meal, a price, or an allergen-unsafe recommendation.
    *
    * Logging (§7.7 privacy): logs the requestId, token counts, and outcome flags
    * only — NEVER the raw query text.
@@ -131,7 +128,9 @@ export class SommelierService {
       requestId,
     };
 
-    const response = this.assembleResponse(intermediate, snapshotById);
+    // 7. Fail-closed post-validation + assembly (T8). Pure; the enforced
+    //    backstop — every safety invariant is applied here, not in the prompt.
+    const response = postValidate(intermediate, snapshotById);
 
     this.logger.log(
       `sommelier ${requestId} ok: tokens=${inputTokens}+${outputTokens} ` +
@@ -140,50 +139,5 @@ export class SommelierService {
     );
 
     return response;
-  }
-
-  /**
-   * STRAIGHTFORWARD T7 assembly (see the T8 BOUNDARY note on {@link ask}).
-   * Joins display fields server-side from the snapshot by id; maps
-   * picks→recommendations; passes confidence through. T8 replaces this with the
-   * fail-closed version.
-   */
-  private assembleResponse(
-    intermediate: SommelierAskIntermediate,
-    snapshotById: Map<string, SnapshotMeal>,
-  ): SommelierAskResponse {
-    const { rawOutput, candidates, sources, requestId } = intermediate;
-    const candidateIds = new Set(candidates.map((c) => c.id));
-
-    const recommendations: SommelierMealRef[] = [];
-    for (const pick of rawOutput.picks) {
-      // T7 join: a pick must be a candidate the model was actually offered, and
-      // its display fields come from the authoritative snapshot meal row — never
-      // the model (F5-AC3: the model structurally cannot fabricate a name or
-      // price). A pick whose id is not a candidate is skipped here; T8
-      // formalizes this as the fail-closed subset + allergen re-check.
-      if (!candidateIds.has(pick.mealId)) {
-        continue;
-      }
-      const meal = snapshotById.get(pick.mealId);
-      if (meal === undefined) {
-        continue;
-      }
-      recommendations.push({
-        mealId: meal.id,
-        name: meal.name,
-        priceCents: meal.priceCents,
-        imageUrl: meal.imageUrl ?? null,
-        why: pick.why,
-      });
-    }
-
-    return {
-      answer: rawOutput.answer,
-      recommendations,
-      sources,
-      confidence: rawOutput.confidence,
-      requestId,
-    };
   }
 }
