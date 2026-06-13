@@ -190,7 +190,7 @@ interface ResolvedCard {
           <section
             class="absolute inset-x-10 bottom-0 h-[120px] border-t border-[var(--hairline)] pt-5"
           >
-            <app-sommelier-input />
+            <app-sommelier-input [menuAllergens]="menuAllergens()" />
           </section>
         </main>
       </div>
@@ -299,7 +299,10 @@ interface ResolvedCard {
         class="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--hairline)] bg-[var(--canvas)] px-4 pt-3 sm:px-6"
         style="padding-bottom: max(12px, env(safe-area-inset-bottom));"
       >
-        <app-sommelier-input [variant]="'compact'" />
+        <app-sommelier-input
+          [variant]="'compact'"
+          [menuAllergens]="menuAllergens()"
+        />
       </div>
 
       <aside
@@ -383,6 +386,20 @@ export class HomeComponent {
   private readonly menuData = toSignal(this.menu.list(), {
     initialValue: [] as CategoryWithMeals[],
   });
+
+  /** Distinct allergen vocabulary across the loaded menu, deduped + sorted.
+   *  Passed down to the sommelier so its select-only chips can never contain a
+   *  value outside the real menu (F4-AC5) — and so we never fetch the menu
+   *  twice. */
+  readonly menuAllergens = computed<string[]>(() =>
+    [
+      ...new Set(
+        this.menuData()
+          .flatMap((c) => c.meals ?? [])
+          .flatMap((m) => m.allergens ?? []),
+      ),
+    ].sort((a, b) => a.localeCompare(b)),
+  );
 
   readonly meals = computed<ResolvedCard[]>(() => {
     const byName = new Map(
