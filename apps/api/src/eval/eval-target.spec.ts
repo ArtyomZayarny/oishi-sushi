@@ -97,16 +97,24 @@ describe('T9 — CI never needs ANTHROPIC_API_KEY', () => {
     expect(ciYml).not.toMatch(/ANTHROPIC_API_KEY/);
   });
 
-  it('CI runs affected -t test (and lint/build) but never the eval target', () => {
-    // The build/test/lint line: `nx affected -t lint test build`.
-    expect(ciYml).toMatch(/nx affected -t lint test build/);
+  it('CI runs affected lint/build and a separate coverage-on affected test, but never the eval target', () => {
+    // `test` is split onto its own `--configuration=ci` line so coverage is ON
+    // (the F4 candidates.ts 100%-branch gate only fires under coverage). lint +
+    // build stay together (they have no `ci` configuration). Both invariants are
+    // asserted so a future edit that drops coverage — or folds test back into a
+    // no-coverage line — fails here.
+    expect(ciYml).toMatch(/nx affected -t lint build/);
+    expect(ciYml).toMatch(/nx affected -t test --configuration=ci/);
     // No CI step invokes the eval target by any spelling.
     expect(ciYml).not.toMatch(/api:eval/);
     expect(ciYml).not.toMatch(/-t\s+eval\b/);
-    // `eval` must not appear in any `nx affected -t …` / `nx run-many -t …` list.
-    const targetLists = ciYml.match(/-t\s+[a-z0-9 _-]+/gi) ?? [];
+    // `eval` must not appear in any `nx affected -t …` / `nx run-many -t …`
+    // target list. Stop at the first non-target token (e.g. `--configuration`)
+    // so flags are never mistaken for targets.
+    const targetLists =
+      ciYml.match(/-t\s+[a-z0-9_-]+(?:\s+[a-z0-9_-]+)*/gi) ?? [];
     for (const list of targetLists) {
-      expect(list.split(/\s+/)).not.toContain('eval');
+      expect(list.replace(/^-t\s+/, '').split(/\s+/)).not.toContain('eval');
     }
   });
 });

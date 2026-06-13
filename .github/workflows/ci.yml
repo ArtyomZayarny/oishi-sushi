@@ -61,8 +61,20 @@ jobs:
           pnpm prisma migrate deploy
           pnpm db:seed
 
-      - name: Affected lint + test + build
-        run: pnpm nx affected -t lint test build --parallel=3
+      - name: Affected lint + build
+        run: pnpm nx affected -t lint build --parallel=3
+
+      # `test` runs separately under the `ci` configuration so coverage is ON.
+      # This is what makes the F4 release-blocking gate real: the 100%-branch
+      # threshold on apps/api/src/sommelier/candidates.ts
+      # (apps/api/jest.config.cts) only fires on a coverage run, so a future
+      # regression in the allergen safety kernel fails CI here. lint/build have
+      # no `ci` configuration, which is why they stay on the line above —
+      # `--configuration=ci` is valid only for the `test` target. This step
+      # targets ONLY the `test` target, so the key-requiring `eval` target
+      # (a separate Nx target, never in the `test` group) can never be picked up.
+      - name: Affected test (coverage on — enforces F4 candidates.ts gate)
+        run: pnpm nx affected -t test --configuration=ci --parallel=3
 
       - name: Install Playwright chromium
         run: pnpm exec playwright install --with-deps chromium

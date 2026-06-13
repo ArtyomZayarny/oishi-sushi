@@ -47,12 +47,18 @@ test.describe('admin end-to-end flow', () => {
     await expect(categorySelect.locator('option').nth(1)).toBeAttached({
       timeout: 10_000,
     });
-    const firstCategoryValue = await categorySelect
+    const firstCategoryOption = categorySelect
       .locator('option:not([disabled])')
-      .first()
-      .getAttribute('value');
-    expect(firstCategoryValue).toBeTruthy();
-    await categorySelect.selectOption(firstCategoryValue ?? '');
+      .first();
+    // Web-first (auto-retrying) assertion that the first enabled option carries
+    // a non-empty value, replacing the former `getAttribute()` + `toBeTruthy()`
+    // pair (playwright/prefer-web-first-assertions). The value is then read
+    // purely to drive selectOption — no longer an assertion target, and the
+    // assertion above guarantees it is non-empty, so no `?? ''` fallback
+    // (and thus no playwright/no-conditional-in-test) is needed.
+    await expect(firstCategoryOption).toHaveAttribute('value', /.+/);
+    const firstCategoryValue = await firstCategoryOption.getAttribute('value');
+    await categorySelect.selectOption(firstCategoryValue as string);
 
     const save = page.locator('[data-editor-save]');
     await expect(save).toBeEnabled();

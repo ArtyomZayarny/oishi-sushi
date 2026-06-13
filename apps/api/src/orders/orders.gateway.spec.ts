@@ -9,6 +9,13 @@ import { PrismaService } from '../prisma/prisma.service';
 
 const TEST_PREFIX = 'gateway-spec';
 
+// Socket connect / event-wait budget. Kept below the jest `testTimeout`
+// (30 s in jest.config.cts) but well above the worst-case latency seen when
+// CI runs `--parallel=3` and bcrypt + DB + socket.io round-trips contend for
+// CPU. The previous hardcoded 5 s fired before the outer test budget and was
+// the source of the "timeout waiting for order:status:changed" flake.
+const SOCKET_TIMEOUT_MS = 20000;
+
 describe('OrdersGateway', () => {
   let app: INestApplication;
   let prisma: PrismaService;
@@ -142,7 +149,7 @@ describe('OrdersGateway', () => {
   function waitForEvent<T = unknown>(
     socket: Socket,
     event: string,
-    timeoutMs = 5000,
+    timeoutMs = SOCKET_TIMEOUT_MS,
   ): Promise<T> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
@@ -160,7 +167,10 @@ describe('OrdersGateway', () => {
     });
   }
 
-  function waitForDisconnect(socket: Socket, timeoutMs = 5000): Promise<void> {
+  function waitForDisconnect(
+    socket: Socket,
+    timeoutMs = SOCKET_TIMEOUT_MS,
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
         () => reject(new Error('timeout waiting for disconnect')),
@@ -191,7 +201,7 @@ describe('OrdersGateway', () => {
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(
         () => reject(new Error('connect timeout')),
-        5000,
+        SOCKET_TIMEOUT_MS,
       );
       socket.on('connect', () => {
         clearTimeout(timer);
@@ -233,7 +243,7 @@ describe('OrdersGateway', () => {
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(
         () => reject(new Error('connect timeout')),
-        5000,
+        SOCKET_TIMEOUT_MS,
       );
       aliceSocket.on('connect', () => {
         clearTimeout(timer);
