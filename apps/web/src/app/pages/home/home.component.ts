@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import type { SommelierMealRef } from '@org/shared-types';
 import { LucideAngularModule, Menu, ShoppingBag, X } from 'lucide-angular';
 
 import { CartStore } from '../../features/cart/cart.store';
@@ -190,7 +191,10 @@ interface ResolvedCard {
           <section
             class="absolute inset-x-10 bottom-0 h-[120px] border-t border-[var(--hairline)] pt-5"
           >
-            <app-sommelier-input [menuAllergens]="menuAllergens()" />
+            <app-sommelier-input
+              [menuAllergens]="menuAllergens()"
+              (addToCart)="onSommelierAdd($event)"
+            />
           </section>
         </main>
       </div>
@@ -302,6 +306,7 @@ interface ResolvedCard {
         <app-sommelier-input
           [variant]="'compact'"
           [menuAllergens]="menuAllergens()"
+          (addToCart)="onSommelierAdd($event)"
         />
       </div>
 
@@ -456,6 +461,19 @@ export class HomeComponent {
 
   onAddToCart(payload: AddToCartPayload): void {
     this.cart.addItem(payload);
+  }
+
+  /** Add a sommelier recommendation to the cart — base meal only (F8-AC3).
+   *  Maps SommelierMealRef → AddToCartPayload (imageUrl narrows string|null →
+   *  string|undefined) so the payload is shape-identical to the menu-card path
+   *  (F8-AC1), then reuses the same CartStore path. */
+  onSommelierAdd(rec: SommelierMealRef): void {
+    this.onAddToCart({
+      mealId: rec.mealId,
+      name: rec.name,
+      priceCents: rec.priceCents,
+      ...(rec.imageUrl ? { imageUrl: rec.imageUrl } : {}),
+    });
   }
 
   toggleMobileNav(): void {
