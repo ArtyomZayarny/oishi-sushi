@@ -3,15 +3,33 @@ import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../app/app.module';
+import { ANTHROPIC_CLIENT } from './anthropic-client';
 import { DailyTokenBudget } from './daily-token-budget.service';
 
-// T2 — POST /api/sommelier walking skeleton.
+// T2/T7 — POST /api/sommelier through the full AppModule (Prisma present).
 // Covers: 200 wire shape, DTO validation 400s, unknown-field stripping,
 // daily token-budget 503 kill-switch. Throttle behaviour lives in its own
-// spec (sommelier.global-throttler.spec.ts) and is exercised here only for
-// the per-IP path where it is cheap to set the limit low via env.
+// spec and is exercised here only for the per-IP path where it is cheap to set
+// the limit low via env.
+//
+// T7 wired the LLM path: with no `ANTHROPIC_API_KEY` in CI the real provider
+// would 503. The fake returns an empty-pick, low-confidence output so the
+// 200-path SHAPE assertions (0..5 recs; sources non-empty iff recs non-empty)
+// stay independent of the live seed contents while still exercising the full
+// orchestration (listPublic → candidates → retrieve → assemble).
+const FAKE_CLIENT = {
+  createMessage: async () => ({
+    rawOutput: {
+      answer: 'A grounded answer with no citation.',
+      picks: [],
+      confidence: 'low' as const,
+    },
+    inputTokens: 100,
+    outputTokens: 40,
+  }),
+};
 
-describe('SommelierController POST /sommelier (T2)', () => {
+describe('SommelierController POST /sommelier (T2/T7)', () => {
   let app: INestApplication;
   let budget: DailyTokenBudget;
 
@@ -24,7 +42,12 @@ describe('SommelierController POST /sommelier (T2)', () => {
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      // No real key in CI ⇒ the real provider would 503; fake the model so the
+      // 200-path shape tests exercise the full orchestration deterministically.
+      .overrideProvider(ANTHROPIC_CLIENT)
+      .useValue(FAKE_CLIENT)
+      .compile();
 
     app = moduleRef.createNestApplication();
     app.use(cookieParser());

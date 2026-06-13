@@ -24,7 +24,7 @@ export class SommelierController {
   @Post()
   @HttpCode(200)
   @UseGuards(DailyTokenBudgetGuard, ThrottlerGuard)
-  ask(@Body() dto: SommelierAskDto): SommelierAskResponse {
+  ask(@Body() dto: SommelierAskDto): Promise<SommelierAskResponse> {
     return this.sommelier.ask(dto);
   }
 }

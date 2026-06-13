@@ -1,5 +1,6 @@
 import { ConfigModule } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
+import { SOMMELIER_MENU } from './menu.port';
 import { NaiveKbRetriever } from './naive-kb.retriever';
 import { SOMMELIER_RETRIEVER, type Retriever, KB_DOC_TYPES } from './retriever';
 import { SommelierModule } from './sommelier.module';
@@ -10,6 +11,11 @@ import { SommelierModule } from './sommelier.module';
  * must succeed at boot with NO `ANTHROPIC_API_KEY` present (the retriever has no
  * key dependency — it is pure KB load). This is the seam T7 injects to build the
  * grounded prompt; proving the token resolves here keeps T7 unblocked.
+ *
+ * T7 note: SommelierModule now binds `SOMMELIER_MENU` to `MenuService` (which
+ * needs PrismaService). This DB-free boot has no PrismaModule, so the menu token
+ * is overridden with a stub purely to let the module graph COMPILE — this spec
+ * only resolves the retriever, never the menu.
  */
 describe('T4 — SOMMELIER_RETRIEVER is provided by SommelierModule', () => {
   let savedKey: string | undefined;
@@ -27,7 +33,12 @@ describe('T4 — SOMMELIER_RETRIEVER is provided by SommelierModule', () => {
   it('resolves the token to a NaiveKbRetriever returning the committed docs', async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [ConfigModule.forRoot({ isGlobal: true }), SommelierModule],
-    }).compile();
+    })
+      // Stub the menu port so the Prisma-less graph compiles (this spec only
+      // exercises the retriever token).
+      .overrideProvider(SOMMELIER_MENU)
+      .useValue({ listPublic: async () => [] })
+      .compile();
 
     const retriever = moduleRef.get<Retriever>(SOMMELIER_RETRIEVER);
     expect(retriever).toBeInstanceOf(NaiveKbRetriever);

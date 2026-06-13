@@ -3,10 +3,27 @@ import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../app/app.module';
+import { ANTHROPIC_CLIENT } from './anthropic-client';
 import {
   SOMMELIER_GLOBAL_THROTTLER,
   buildSommelierThrottlers,
 } from './sommelier.throttle';
+
+// T7: the per-IP throttle integration asserts 200 on the first requests; with
+// no key in CI the real LLM provider would 503, so fake ANTHROPIC_CLIENT with a
+// deterministic empty-pick output. The throttle behaviour (200 → 200 → 429) is
+// what's under test; the model is incidental.
+const FAKE_CLIENT = {
+  createMessage: async () => ({
+    rawOutput: {
+      answer: 'A grounded answer.',
+      picks: [],
+      confidence: 'low' as const,
+    },
+    inputTokens: 10,
+    outputTokens: 5,
+  }),
+};
 
 // T2 cost-guard ① — throttling on POST /api/sommelier.
 //   - Per-IP throttler (default tracker) → SOMMELIER_THROTTLE_LIMIT req/min/IP.
@@ -58,7 +75,10 @@ describe('Sommelier per-IP throttle (T2) — integration', () => {
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ANTHROPIC_CLIENT)
+      .useValue(FAKE_CLIENT)
+      .compile();
 
     app = moduleRef.createNestApplication();
     app.use(cookieParser());
