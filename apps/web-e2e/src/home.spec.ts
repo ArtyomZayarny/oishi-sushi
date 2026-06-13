@@ -57,10 +57,16 @@ test.describe('homepage (spec §1 — 1440×900 single viewport)', () => {
     await page.goto('/');
     await expect(page.locator('[data-cart-badge]')).toHaveCount(0);
 
-    const firstAdd = page.locator('[data-add-button]').first();
-    await firstAdd.click();
-
-    await expect(page.locator('[data-cart-badge]')).toHaveText('1');
+    // The Add button's (click)="onAddToCart()" handler is wired during Angular
+    // hydration; a click in the brief pre-hydration window is a no-op and the
+    // badge never appears. Retry click + assertion as one block so hydration
+    // wins deterministically (vs. racing a single click).
+    await expect(async () => {
+      await page.locator('[data-add-button]').first().click();
+      await expect(page.locator('[data-cart-badge]')).toHaveText('1', {
+        timeout: 2000,
+      });
+    }).toPass({ timeout: 20_000 });
   });
 
   test('renders without a vertical scrollbar at 1440×900', async ({ page }) => {

@@ -8,14 +8,18 @@ import {
   waitForAuthHydrated,
 } from './helpers';
 
-const TEST_MEAL_NAME = 'Test Roll';
+// Unique per run. `Meal.name` is a GLOBAL `@unique` (prisma/schema.prisma) that
+// ignores `deletedAt`, and the admin DELETE endpoint only SOFT-deletes
+// (menu.service.softDelete sets deletedAt, the row + its name persist). A fixed
+// name therefore 409s on the second local run. A per-run suffix sidesteps the
+// collision entirely — correctness no longer depends on cleanup running, and it
+// needs no backend hard-delete endpoint or direct DB access from the spec.
+const TEST_MEAL_NAME = `Test Roll ${Date.now()}`;
 
 test.describe('admin end-to-end flow', () => {
-  test.beforeEach(async ({ request }) => {
-    await login(request, ADMIN);
-    await deleteMealByName(request, TEST_MEAL_NAME);
-  });
-
+  // Best-effort tidy-up so soft-deleted rows don't accumulate across runs. Not
+  // load-bearing for correctness (the unique suffix above guarantees no clash);
+  // kept so a long sequence of local runs doesn't leave a trail of dead rows.
   test.afterEach(async ({ request }) => {
     await login(request, ADMIN);
     await deleteMealByName(request, TEST_MEAL_NAME);

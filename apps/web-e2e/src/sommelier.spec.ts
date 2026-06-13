@@ -156,10 +156,46 @@ async function mockSommelier(
   });
 }
 
-async function ask(page: Page, query: string): Promise<void> {
-  const input = page.locator('[data-kenji-input]');
-  await input.fill(query);
-  await page.locator('[data-send-button]').click();
+/**
+ * Submit a query to Kenji, hydration-safe.
+ *
+ * The send button is `type="submit"` inside `<form (ngSubmit)>`
+ * (sommelier-input.component.ts). If a click lands in the brief window before
+ * Angular's submit listener is active, the browser performs a NATIVE form
+ * submission — a GET that navigates the page to `/?`, wiping the SPA and the
+ * route mocks, so the answer panel never appears. That navigation is the root
+ * of the intermittent "[data-panel-loading]/[data-sommelier-panel] not found"
+ * failures.
+ *
+ * Rather than gate on a fragile framework hydration marker (SSG keeps
+ * `ng-server-context`; `ngh` is consumed before `goto` resolves), make the
+ * interaction self-correcting: fill + click, then assert the hydrated handler
+ * caught it — the panel opened (loading or answer) and we did NOT navigate away
+ * from the home path. `expect(...).toPass()` retries the whole block, so a
+ * stray native submit that bounces to `/?` simply triggers another attempt
+ * until hydration wins. Deterministic and lint-clean. `root` scopes the
+ * input/button (the mobile dock passes its own).
+ */
+async function ask(
+  page: Page,
+  query: string,
+  root: Page | ReturnType<Page['locator']> = page,
+): Promise<void> {
+  await expect(async () => {
+    // A prior attempt's stray native submit may have navigated to `/?`; bring
+    // the page back so the retry starts from a clean home render.
+    if (new URL(page.url()).search !== '') {
+      await page.goto('/');
+    }
+    await root.locator('[data-kenji-input]').fill(query);
+    await root.locator('[data-send-button]').click();
+    // Proof the hydrated (ngSubmit) handler ran: the panel exists and the
+    // native GET did NOT navigate (search string stays empty).
+    await expect(page.locator('[data-sommelier-panel]')).toBeAttached({
+      timeout: 2000,
+    });
+    expect(new URL(page.url()).search).toBe('');
+  }).toPass({ timeout: 20_000 });
 }
 
 // ───────────────────────────── Desktop (full) ─────────────────────────────
@@ -231,8 +267,8 @@ test.describe('T13 / F7-AC4 — happy path, MOBILE compact dock', () => {
     const dock = page.locator('[data-sommelier-dock]');
     await expect(dock).toBeVisible();
 
-    await dock.locator('[data-kenji-input]').fill('something spicy with tuna');
-    await dock.locator('[data-send-button]').click();
+    // Hydration-safe submit scoped to the dock (see ask()).
+    await ask(page, 'something spicy with tuna', dock);
 
     await expect(page.locator('[data-panel-loading]')).toBeVisible();
 
