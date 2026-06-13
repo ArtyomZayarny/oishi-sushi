@@ -23,7 +23,11 @@ async function bootstrap() {
     credentials: true,
   });
   const port = process.env.PORT || 3000;
-  await app.listen(port);
+  // Bind dual-stack (IPv6 `::`, which also accepts IPv4) so the app is reachable
+  // over Railway's private network — `<service>.railway.internal` resolves to
+  // IPv6, and an IPv4-only bind (the bare `listen(port)` default) is refused by
+  // sibling services even though the localhost healthcheck still passes.
+  await app.listen(port, '::');
   Logger.log(
     `Application is running on: http://localhost:${port}/${globalPrefix}`,
   );
