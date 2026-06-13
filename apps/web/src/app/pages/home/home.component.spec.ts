@@ -279,4 +279,56 @@ describe('HomeComponent', () => {
       expect(somm).not.toBeNull();
     });
   });
+
+  describe('T11 — distinct menu allergens passed down to the sommelier', () => {
+    const withAllergens: CategoryWithMeals[] = [
+      {
+        id: 'c1',
+        name: 'Maki',
+        slug: 'maki',
+        sortOrder: 1,
+        meals: [
+          buildMeal({ id: 'a', name: 'A', allergens: ['Fish', 'Soy'] }),
+          buildMeal({ id: 'b', name: 'B', allergens: ['Soy', 'Gluten'] }),
+        ],
+      },
+      {
+        id: 'c2',
+        name: 'Nigiri',
+        slug: 'nigiri',
+        sortOrder: 2,
+        meals: [
+          buildMeal({ id: 'c', name: 'C', allergens: ['Shellfish', 'Fish'] }),
+        ],
+      },
+    ];
+
+    it('computes a deduped, sorted distinct allergen vocabulary', () => {
+      const { fixture } = setup(withAllergens);
+      expect(fixture.componentInstance.menuAllergens()).toEqual([
+        'Fish',
+        'Gluten',
+        'Shellfish',
+        'Soy',
+      ]);
+    });
+
+    it('is empty when no meal declares an allergen', () => {
+      const { fixture } = setup();
+      expect(fixture.componentInstance.menuAllergens()).toEqual([]);
+    });
+
+    it('renders allergen chips inside the sommelier input from that vocab', () => {
+      const { fixture } = setup(withAllergens);
+      const chips = fixture.nativeElement.querySelectorAll(
+        '[data-allergen-chip]',
+      );
+      // 4 distinct allergens × however many sommelier instances render in the
+      // active (desktop) layout — at minimum the 4 distinct values appear.
+      const labels = new Set(
+        Array.from(chips).map((c) => (c as HTMLElement).textContent?.trim()),
+      );
+      expect(labels).toEqual(new Set(['Fish', 'Gluten', 'Shellfish', 'Soy']));
+    });
+  });
 });
