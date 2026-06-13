@@ -15,7 +15,11 @@ module.exports = {
       compiler: 'tsc',
       main: './src/main.ts',
       tsConfig: './tsconfig.app.json',
-      assets: ['./src/assets'],
+      // './src/assets' → dist/assets; './src/sommelier/kb' → dist/sommelier/kb
+      // (Nx normalizeAssets sets output = relative(sourceRoot, input)). The kb
+      // glob is REQUIRED: without it the built main.js has no knowledge base at
+      // runtime (works-in-dev/breaks-in-dist). Verified by kb-dist.spec.ts.
+      assets: ['./src/assets', './src/sommelier/kb'],
       optimization: false,
       outputHashing: 'none',
       generatePackageJson: false,
