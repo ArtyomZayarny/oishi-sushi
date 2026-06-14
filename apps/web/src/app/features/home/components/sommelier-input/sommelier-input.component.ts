@@ -247,7 +247,7 @@ export type SommelierStatus =
                   data-answer-text
                   class="text-[14px] leading-relaxed text-[var(--text-primary)]"
                 >
-                  {{ response()?.answer }}
+                  {{ displayAnswer() }}
                 </p>
                 <a
                   data-browse-menu
@@ -266,7 +266,7 @@ export type SommelierStatus =
                   data-answer-text
                   class="text-[14px] leading-relaxed text-[var(--text-primary)]"
                 >
-                  {{ response()?.answer }}
+                  {{ displayAnswer() }}
                 </p>
 
                 <div
@@ -417,7 +417,7 @@ export class SommelierInputComponent {
   readonly skeletonSlots = [0, 1, 2] as const;
 
   /** Compact, display-only sources summary (e.g. "menu, knowledge base").
-   *  [n] markers stay inline in the answer text; this is just provenance. */
+   *  Just provenance — the inline [n] markers are stripped from `displayAnswer`. */
   readonly sourcesLine = computed(() => {
     const sources = this.response()?.sources ?? [];
     const kinds = new Set(
@@ -425,6 +425,16 @@ export class SommelierInputComponent {
     );
     return [...kinds].join(', ');
   });
+
+  /** Answer prose for the customer UI — inline [n] citation markers are stripped
+   *  (the API still returns them for grounding/audit; F1-AC4). Collapses the gap a
+   *  removed marker leaves behind. */
+  readonly displayAnswer = computed(() =>
+    (this.response()?.answer ?? '')
+      .replace(/\s*\[\d+\]/g, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim(),
+  );
 
   /** The query + allergen snapshot backing the in-flight/last request — retry
    *  re-issues THESE, not the live input/chips (F7-AC2). */
@@ -460,6 +470,7 @@ export class SommelierInputComponent {
     const query = this.form.controls.query.value.trim();
     if (!query) return;
     this.run(query, this.currentAvoid());
+    this.form.controls.query.reset(); // clear input after dispatch (chat-style); retry uses lastQuery
   }
 
   /** Re-issue the same query+allergens that failed (F7-AC2). */

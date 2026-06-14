@@ -234,6 +234,16 @@ describe('SommelierInputComponent', () => {
       expect(api.calls[0].query).toBe('hello');
     });
 
+    it('clears the input after a successful submit (chat-style)', () => {
+      const { fixture, api } = setup();
+      fixture.componentInstance.form.controls.query.setValue(
+        'what pairs with sake',
+      );
+      fixture.componentInstance.onSubmit();
+      expect(api.calls.length).toBe(1);
+      expect(fixture.componentInstance.form.controls.query.value).toBe('');
+    });
+
     it('ignores repeat submits while a request is in flight', () => {
       const { fixture, api } = setup();
       fixture.componentInstance.form.controls.query.setValue('first');
@@ -435,13 +445,17 @@ describe('SommelierInputComponent', () => {
   });
 
   describe('T11 / F7-AC3 — answer state renders text + exactly N cards', () => {
-    it('renders the answer text verbatim (with [n] markers as plain text)', () => {
+    it('strips inline [n] citation markers from the displayed answer (API still returns them)', () => {
       const { fixture, api } = setup();
       ask(fixture, api, 'spicy tuna', ANSWER_MULTI);
       const text = fixture.nativeElement.querySelector('[data-answer-text]');
+      // customer-facing prose: markers gone, surrounding spacing collapsed cleanly
       expect(text?.textContent).toContain(
-        'Two great picks: Spicy Tuna Roll [1] and Tuna Tataki [2].',
+        'Two great picks: Spicy Tuna Roll and Tuna Tataki.',
       );
+      expect(text?.textContent).not.toMatch(/\[\d+\]/);
+      // the API response still carries the citations (grounding/audit; F1-AC4)
+      expect(fixture.componentInstance.response()?.answer).toContain('[1]');
     });
 
     it('renders exactly recommendations.length cards', () => {
@@ -525,6 +539,19 @@ describe('SommelierInputComponent', () => {
       expect(text?.textContent).toContain(
         "We don't serve pizza — we're a sushi shop.",
       );
+    });
+
+    it('also strips [n] markers in the abstain panel', () => {
+      const { fixture, api } = setup();
+      ask(fixture, api, 'pizza?', {
+        ...ABSTAIN,
+        answer: 'We only do sushi here [1] — try the menu.',
+      });
+      const text = fixture.nativeElement.querySelector('[data-answer-text]');
+      expect(text?.textContent).toContain(
+        'We only do sushi here — try the menu.',
+      );
+      expect(text?.textContent).not.toMatch(/\[\d+\]/);
     });
 
     it('renders NO recommendation cards in the abstain state', () => {
