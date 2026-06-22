@@ -1,0 +1,53 @@
+{
+  "answer": "Great news — all three dishes currently available to you are shellfish-free! [4] You can enjoy the Toro Truffle Roll (fatty tuna with black truffle), the Otoro Selection (aged bluefin belly nigiri), or the Ikura Don (salmon roe rice bowl). [4] Please note that our kitchen handles shellfish, so cross-contact is possible — if your allergy is serious, we recommend confirming with the shop directly before ordering.",
+  "recommendations": [
+    {
+      "mealId": "cmqdvmfvu000a19rntiotwv9f",
+      "name": "Toro Truffle Roll",
+      "priceCents": 3800,
+      "imageUrl": "/assets/meals/toro-truffle-roll.jpg",
+      "why": "The Toro Truffle Roll contains only fish allergens — no shellfish — making it a safe and luxurious shellfish-free choice. [1]"
+    },
+    {
+      "mealId": "cmqdvmf8u000819rnerqsipxz",
+      "name": "Otoro Selection",
+      "priceCents": 4800,
+      "imageUrl": "/assets/meals/otoro-selection.jpg",
+      "why": "The Otoro Selection is tagged with fish only, so it's free of shellfish and offers a rich, melt-in-the-mouth bluefin belly experience. [2]"
+    },
+    {
+      "mealId": "cmqdvmh2e000c19rnybrkga3c",
+      "name": "Ikura Don",
+      "priceCents": 3200,
+      "imageUrl": "/assets/meals/ikura-don.jpg",
+      "why": "The Ikura Don carries fish and soy allergens but no shellfish, making it a comforting shellfish-free rice bowl option. [3]"
+    }
+  ],
+  "sources": [
+    { "type": "menu", "ref": "cmqdvmfvu000a19rntiotwv9f" },
+    { "type": "menu", "ref": "cmqdvmf8u000819rnerqsipxz" },
+    { "type": "menu", "ref": "cmqdvmh2e000c19rnybrkga3c" },
+    {
+      "type": "kb",
+      "ref": "allergen-policy",
+      "section": "Allergens & dietary information"
+    },
+    {
+      "type": "kb",
+      "ref": "faq",
+      "section": "Ordering & frequently asked questions"
+    },
+    {
+      "type": "kb",
+      "ref": "pairings-occasions",
+      "section": "Pairings & occasions"
+    },
+    {
+      "type": "kb",
+      "ref": "taste-guide",
+      "section": "Flavor, richness & texture"
+    }
+  ],
+  "confidence": "high",
+  "requestId": "req_c137a763-7e2a-454c-8ed7-7dceb834163f"
+}

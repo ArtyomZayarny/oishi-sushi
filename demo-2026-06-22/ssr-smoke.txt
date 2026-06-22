@@ -1,0 +1,11 @@
+[ssr] Node Express server listening on http://localhost:4099
+
+SSR post-build smoke (F7-AC5):
+  PASS  GET / returns 200
+  PASS  response is server-rendered HTML (has <app-root>)
+  PASS  sommelier shell rendered server-side (app-sommelier-input present)
+  PASS  sommelier input shell present (data-kenji-input)
+  PASS  "SOMMELIER AI" label rendered
+  PASS  ZERO /api/sommelier calls during server render (saw 0)
+
+SSR smoke PASSED.

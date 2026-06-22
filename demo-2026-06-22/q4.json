@@ -1,0 +1,34 @@
+{
+  "answer": "Unfortunately, we don't have any deals, discounts, coupons, or special offers available [8]. I'd encourage you to browse our full menu to find something that suits you!",
+  "recommendations": [],
+  "sources": [
+    { "type": "menu", "ref": "cmqdvmfvu000a19rntiotwv9f" },
+    { "type": "menu", "ref": "cmqdvmf8u000819rnerqsipxz" },
+    { "type": "menu", "ref": "cmqdvmfk8000919rnh5lkqaty" },
+    { "type": "menu", "ref": "cmqdvmgqm000b19rnzh4zmqq2" },
+    { "type": "menu", "ref": "cmqdvmh2e000c19rnybrkga3c" },
+    { "type": "menu", "ref": "cmqdvmhdm000d19rnnunelfq1" },
+    {
+      "type": "kb",
+      "ref": "allergen-policy",
+      "section": "Allergens & dietary information"
+    },
+    {
+      "type": "kb",
+      "ref": "faq",
+      "section": "Ordering & frequently asked questions"
+    },
+    {
+      "type": "kb",
+      "ref": "pairings-occasions",
+      "section": "Pairings & occasions"
+    },
+    {
+      "type": "kb",
+      "ref": "taste-guide",
+      "section": "Flavor, richness & texture"
+    }
+  ],
+  "confidence": "abstain",
+  "requestId": "req_1ecb8a1d-9a22-4dc7-b0f2-2835d0dccbed"
+}
