@@ -228,9 +228,14 @@ test.describe('T13 / F7-AC4 — happy path, DESKTOP full variant', () => {
     // Answer panel + exactly recommendations.length cards.
     const panel = page.locator('[data-sommelier-panel]');
     await expect(panel).toBeVisible();
+    // The UI strips inline [n] citation markers from the DISPLAYED prose (the
+    // API still returns them for grounding/audit, F1-AC4 —
+    // sommelier-input.component.ts#displayAnswer). Assert the stripped text and
+    // that no marker leaks into the rendered panel.
     await expect(panel.locator('[data-answer-text]')).toContainText(
-      'Spicy Tuna Roll [1]',
+      'the Spicy Tuna Roll is your best bet',
     );
+    await expect(panel.locator('[data-answer-text]')).not.toContainText('[1]');
     await expect(page.locator('[data-rec-card]')).toHaveCount(2);
     await expect(
       page.locator('[data-rec-card] [data-rec-name]').first(),

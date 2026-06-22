@@ -127,8 +127,13 @@ export class AnthropicClientProvider {
 
     // Model-call constraints (Opus 4.8 — CRITICAL): model from config;
     // non-streaming; max_tokens from config; structured JSON via
-    // output_config.format; NO temperature/top_p/top_k/budget_tokens; NO
-    // thinking; NO assistant prefill (every message is role:user).
+    // output_config.format; NO top_p/top_k/budget_tokens; NO thinking; NO
+    // assistant prefill (every message is role:user).
+    //
+    // temperature is accepted on Sonnet/Haiku but REJECTED (400) on Opus
+    // 4.7/4.8/Fable — it is included ONLY when cfg.temperature is set
+    // (SOMMELIER_TEMPERATURE), so the default Opus path omits it entirely. Only
+    // set SOMMELIER_TEMPERATURE on a model that accepts it.
     const body: MessageCreateParamsNonStreaming = {
       model: this.cfg.model,
       max_tokens: this.cfg.maxTokens,
@@ -137,6 +142,9 @@ export class AnthropicClientProvider {
       output_config: {
         format: { type: 'json_schema', schema: params.schema },
       },
+      ...(this.cfg.temperature !== undefined
+        ? { temperature: this.cfg.temperature }
+        : {}),
     };
 
     let response: Message;

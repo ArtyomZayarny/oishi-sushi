@@ -84,6 +84,13 @@
     "intent": "allergen"
   },
   {
+    "id": "allergen-avoid-fish-wipeout",
+    "query": "I have a serious fish allergy — is there anything here that's safe for me?",
+    "avoidAllergens": ["fish"],
+    "expectAbstain": true,
+    "intent": "allergen"
+  },
+  {
     "id": "newest-whats-new",
     "query": "What's new on the menu?",
     "intent": "newest"

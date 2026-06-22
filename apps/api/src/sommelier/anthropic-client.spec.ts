@@ -30,6 +30,7 @@ function makeConfig(
     anthropicApiKey: 'sk-ant-test-key',
     hasAnthropicKey: true,
     model: SOMMELIER_CONFIG_DEFAULTS.model,
+    temperature: undefined,
     timeoutMs: SOMMELIER_CONFIG_DEFAULTS.timeoutMs,
     maxTokens: SOMMELIER_CONFIG_DEFAULTS.maxTokens,
     throttleLimit: SOMMELIER_CONFIG_DEFAULTS.throttleLimit,
@@ -155,19 +156,38 @@ describe('T7 — AnthropicClientProvider', () => {
       expect(params.stream).toBeUndefined();
     });
 
-    it('passes NO sampling params (no temperature/top_p/top_k/budget_tokens)', async () => {
+    it('passes NO sampling params when temperature is unset (Opus default — these 400 on Opus)', async () => {
       const creator = spyCreator(async () =>
         messageWith(VALID_OUTPUT, {
           input_tokens: 10,
           output_tokens: 5,
         }),
       );
+      // Default config has temperature: undefined ⇒ the body omits it.
       await buildProvider(creator).createMessage(CALL);
       const params = creator.params();
       expect(params).not.toHaveProperty('temperature');
       expect(params).not.toHaveProperty('top_p');
       expect(params).not.toHaveProperty('top_k');
       expect(params).not.toHaveProperty('budget_tokens');
+    });
+
+    it('includes temperature ONLY when cfg.temperature is set (e.g. Sonnet/Haiku, temperature=0)', async () => {
+      const creator = spyCreator(async () =>
+        messageWith(VALID_OUTPUT, {
+          input_tokens: 10,
+          output_tokens: 5,
+        }),
+      );
+      await buildProvider(
+        creator,
+        makeConfig({ temperature: 0 }),
+      ).createMessage(CALL);
+      const params = creator.params();
+      expect(params).toHaveProperty('temperature', 0);
+      // The other sampling params are still never sent.
+      expect(params).not.toHaveProperty('top_p');
+      expect(params).not.toHaveProperty('top_k');
     });
 
     it('OMITS thinking entirely (off by default on 4.8)', async () => {

@@ -18,6 +18,7 @@ function makeBudget(budget: number): DailyTokenBudget {
     anthropicApiKey: undefined,
     hasAnthropicKey: false,
     model: SOMMELIER_CONFIG_DEFAULTS.model,
+    temperature: undefined,
     timeoutMs: SOMMELIER_CONFIG_DEFAULTS.timeoutMs,
     maxTokens: SOMMELIER_CONFIG_DEFAULTS.maxTokens,
     throttleLimit: SOMMELIER_CONFIG_DEFAULTS.throttleLimit,

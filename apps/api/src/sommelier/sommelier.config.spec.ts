@@ -17,6 +17,9 @@ describe('T3 — sommelier typed config (loadSommelierConfig)', () => {
     it('returns every spec default for a fully empty env', () => {
       const cfg = loadSommelierConfig({});
       expect(cfg.model).toBe('claude-opus-4-8');
+      // No SOMMELIER_TEMPERATURE ⇒ undefined ⇒ the request body OMITS
+      // temperature, keeping the Opus default path byte-identical.
+      expect(cfg.temperature).toBeUndefined();
       expect(cfg.timeoutMs).toBe(25000);
       expect(cfg.maxTokens).toBe(1000);
       expect(cfg.throttleLimit).toBe(5);
@@ -40,6 +43,15 @@ describe('T3 — sommelier typed config (loadSommelierConfig)', () => {
     it('reads SOMMELIER_MODEL as-is', () => {
       const cfg = loadSommelierConfig({ SOMMELIER_MODEL: 'claude-sonnet-4-6' });
       expect(cfg.model).toBe('claude-sonnet-4-6');
+    });
+
+    it('reads SOMMELIER_TEMPERATURE as a number, including 0', () => {
+      expect(
+        loadSommelierConfig({ SOMMELIER_TEMPERATURE: '0' }).temperature,
+      ).toBe(0);
+      expect(
+        loadSommelierConfig({ SOMMELIER_TEMPERATURE: '0.7' }).temperature,
+      ).toBe(0.7);
     });
 
     it('coerces every numeric var from its string env value', () => {
@@ -69,6 +81,18 @@ describe('T3 — sommelier typed config (loadSommelierConfig)', () => {
       expect(cfg.timeoutMs).toBe(25000);
       expect(cfg.maxTokens).toBe(1000);
       expect(cfg.throttleLimit).toBe(5);
+    });
+
+    it('temperature is undefined (NOT a number) for blank/whitespace/non-numeric', () => {
+      expect(
+        loadSommelierConfig({ SOMMELIER_TEMPERATURE: '' }).temperature,
+      ).toBeUndefined();
+      expect(
+        loadSommelierConfig({ SOMMELIER_TEMPERATURE: '   ' }).temperature,
+      ).toBeUndefined();
+      expect(
+        loadSommelierConfig({ SOMMELIER_TEMPERATURE: 'hot' }).temperature,
+      ).toBeUndefined();
     });
   });
 

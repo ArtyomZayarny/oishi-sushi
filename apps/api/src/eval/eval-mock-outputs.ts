@@ -99,6 +99,16 @@ export const EVAL_MOCK_OUTPUTS: Record<string, SommelierModelOutput> = {
     ],
     confidence: 'high',
   },
+  'allergen-avoid-fish-wipeout': {
+    // Every meal in the seed carries `fish`, so the hard filter removes ALL
+    // candidates — the model has nothing safe to offer and must abstain cleanly.
+    // The honest answer names NO dish (all six names are excluded, so any name
+    // would be scrubbed/flagged as a leak) and carries no URL or code.
+    answer:
+      'Every dish on our menu contains fish, so I have nothing I can safely recommend for a fish allergy. Please check with our staff before ordering.',
+    picks: [],
+    confidence: 'abstain',
+  },
 
   // ---- newest (well-behaved; newest universe is resolved at runtime) ----
   'newest-whats-new': {

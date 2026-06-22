@@ -67,6 +67,7 @@ function buildService(output: SommelierAskResponse | unknown): {
     anthropicApiKey: undefined,
     hasAnthropicKey: false,
     model: SOMMELIER_CONFIG_DEFAULTS.model,
+    temperature: undefined,
     timeoutMs: SOMMELIER_CONFIG_DEFAULTS.timeoutMs,
     maxTokens: SOMMELIER_CONFIG_DEFAULTS.maxTokens,
     throttleLimit: SOMMELIER_CONFIG_DEFAULTS.throttleLimit,
@@ -90,10 +91,17 @@ describe('T9 — deterministic mocked eval subset (safety, no key)', () => {
     for (const c of subset) {
       byIntent.set(c.intent, (byIntent.get(c.intent) ?? 0) + 1);
     }
-    for (const intent of ['preference', 'allergen', 'newest', 'abstain']) {
+    for (const intent of ['preference', 'newest', 'abstain']) {
       expect(byIntent.get(intent) ?? 0).toBeGreaterThanOrEqual(2);
       expect(byIntent.get(intent) ?? 0).toBeLessThanOrEqual(3);
     }
+    // allergen carries one extra deterministic case — the fish-allergen wipe-out
+    // (every seed meal has `fish`, so the hard filter empties the candidate set
+    // and the only safe outcome is an abstain). That forced-abstain edge belongs
+    // in the mocked subset because postValidate must hold it safe with no key, so
+    // the allergen upper bound is 4 here while the others stay at 2–3.
+    expect(byIntent.get('allergen') ?? 0).toBeGreaterThanOrEqual(2);
+    expect(byIntent.get('allergen') ?? 0).toBeLessThanOrEqual(4);
     // exactly the single injection case.
     expect(byIntent.get('injection') ?? 0).toBe(1);
   });

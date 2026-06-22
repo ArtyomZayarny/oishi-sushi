@@ -36,6 +36,14 @@ export interface SommelierConfig {
   hasAnthropicKey: boolean;
   /** `SOMMELIER_MODEL` — defaults to `claude-opus-4-8`. */
   model: string;
+  /**
+   * `SOMMELIER_TEMPERATURE` — optional sampling temperature (valid range
+   * 0.0–1.0). No default: `undefined` when unset/blank, so the request body
+   * OMITS `temperature` entirely (the Opus path stays byte-identical). Opus
+   * 4.7/4.8 and Fable REJECT temperature with a 400 — only set this on a model
+   * that accepts it (Sonnet 4.6 / Haiku 4.5).
+   */
+  temperature: number | undefined;
   /** `SOMMELIER_TIMEOUT_MS` — server-side Anthropic call timeout (ms). */
   timeoutMs: number;
   /** `SOMMELIER_MAX_TOKENS` — model response cap. */
@@ -62,6 +70,20 @@ function numberFromEnv(value: string | undefined, fallback: number): number {
 }
 
 /**
+ * Like {@link numberFromEnv} but with NO numeric fallback: an unset, blank, or
+ * non-numeric value yields `undefined` (so the caller omits the field), while a
+ * valid number string yields that number — including `0`. This is what keeps the
+ * Opus default path byte-identical when `SOMMELIER_TEMPERATURE` is not set.
+ */
+function optionalNumberFromEnv(value: string | undefined): number | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  if (trimmed === '') return undefined;
+  const n = Number(trimmed);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/**
  * Pure reader: environment → typed {@link SommelierConfig}. Unit-testable
  * without booting Nest. `sommelierConfig` (below) delegates to this over
  * `process.env`.
@@ -77,6 +99,7 @@ export function loadSommelierConfig(
     anthropicApiKey,
     hasAnthropicKey: anthropicApiKey !== undefined,
     model: env.SOMMELIER_MODEL?.trim() || SOMMELIER_CONFIG_DEFAULTS.model,
+    temperature: optionalNumberFromEnv(env.SOMMELIER_TEMPERATURE),
     timeoutMs: numberFromEnv(
       env.SOMMELIER_TIMEOUT_MS,
       SOMMELIER_CONFIG_DEFAULTS.timeoutMs,
