@@ -1,0 +1,20 @@
+# syntax=docker/dockerfile:1
+#
+# web service (Angular SSR / Express) — single-stage, same rationale as
+# Dockerfile.api: pnpm workspace + keep the runtime deps the compiled SSR
+# server externalizes (express, http-proxy-middleware, @angular/ssr).
+#
+FROM node:20.20.2-bookworm-slim
+
+WORKDIR /app
+ENV CI=true
+ENV HUSKY=0
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm exec nx build web --configuration=production
+
+# The SSR server binds $PORT (Railway injects it); falls back to 4000 locally.
+EXPOSE 4000
+CMD ["node", "dist/apps/web/server/server.mjs"]

@@ -1,0 +1,49 @@
+{
+  "answer": "I'd love to help, but none of our current tuna dishes are described as spicy [10]. I can point you to our tuna-forward options — the Toro Truffle Roll and Otoro Selection are both rich and fatty, though neither carries a spicy element [1][2].",
+  "recommendations": [
+    {
+      "mealId": "cmqdvmfvu000a19rntiotwv9f",
+      "name": "Toro Truffle Roll",
+      "priceCents": 3800,
+      "imageUrl": "/assets/meals/toro-truffle-roll.jpg",
+      "why": "The Toro Truffle Roll is tuna-forward with fatty toro and earthy black truffle — the closest match to a bold, interesting tuna dish, though it is not spicy [1]."
+    },
+    {
+      "mealId": "cmqdvmf8u000819rnerqsipxz",
+      "name": "Otoro Selection",
+      "priceCents": 4800,
+      "imageUrl": "/assets/meals/otoro-selection.jpg",
+      "why": "The Otoro Selection is the most tuna-rich, indulgent option on the menu — intensely buttery bluefin belly, though again without any spice [2]."
+    }
+  ],
+  "sources": [
+    { "type": "menu", "ref": "cmqdvmfvu000a19rntiotwv9f" },
+    { "type": "menu", "ref": "cmqdvmf8u000819rnerqsipxz" },
+    { "type": "menu", "ref": "cmqdvmfk8000919rnh5lkqaty" },
+    { "type": "menu", "ref": "cmqdvmgqm000b19rnzh4zmqq2" },
+    { "type": "menu", "ref": "cmqdvmh2e000c19rnybrkga3c" },
+    { "type": "menu", "ref": "cmqdvmhdm000d19rnnunelfq1" },
+    {
+      "type": "kb",
+      "ref": "allergen-policy",
+      "section": "Allergens & dietary information"
+    },
+    {
+      "type": "kb",
+      "ref": "faq",
+      "section": "Ordering & frequently asked questions"
+    },
+    {
+      "type": "kb",
+      "ref": "pairings-occasions",
+      "section": "Pairings & occasions"
+    },
+    {
+      "type": "kb",
+      "ref": "taste-guide",
+      "section": "Flavor, richness & texture"
+    }
+  ],
+  "confidence": "low",
+  "requestId": "req_bdfcf8be-2433-48e1-b217-69d553b2f075"
+}

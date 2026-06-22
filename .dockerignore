@@ -1,0 +1,36 @@
+# deps & build artifacts — reinstalled / rebuilt inside the image
+**/node_modules
+dist
+**/dist
+.nx
+.angular
+**/.angular
+
+# vcs & local tooling
+.git
+.gitignore
+.claude
+.vscode
+.idea
+
+# secrets — never bake into an image (.env.staging.example is excluded too;
+# it is documentation, the values live in Railway's variables)
+.env
+.env.*
+
+# test / report / scratch output
+test-output
+**/test-output
+playwright-report
+**/playwright-report
+coverage
+**/coverage
+**/screenshots
+tmp
+iter-*
+
+# docker + misc
+Dockerfile*
+.dockerignore
+*.log
+.DS_Store

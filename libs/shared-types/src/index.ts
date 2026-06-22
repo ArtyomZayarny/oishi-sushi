@@ -3,3 +3,4 @@ export * from './lib/enums.js';
 export * from './lib/user.js';
 export * from './lib/meal.js';
 export * from './lib/order.js';
+export * from './lib/sommelier.js';

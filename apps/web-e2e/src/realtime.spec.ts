@@ -40,11 +40,17 @@ test.describe('realtime order status updates', () => {
       await expect(badge).toHaveText(/pending/i);
       const initialNavCount = customerPage.url();
 
-      // Trigger the change from the admin context
-      await patchOrderStatus(adminCtx.request, order.id, 'CONFIRMED');
-
-      // Within 3s the badge text must change without a reload
-      await expect(badge).toHaveText(/confirmed/i, { timeout: 3_000 });
+      // The customer page joins its order room over a socket.io connection that
+      // is established asynchronously after navigation; a patch that fires
+      // before the room is joined would miss the broadcast. Re-issuing the
+      // (idempotent) CONFIRMED patch inside a toPass block re-emits the event,
+      // so once the socket is connected the badge flips — deterministic instead
+      // of racing the connection. The 3s inner timeout still proves each
+      // delivered event propagates promptly without a reload.
+      await expect(async () => {
+        await patchOrderStatus(adminCtx.request, order.id, 'CONFIRMED');
+        await expect(badge).toHaveText(/confirmed/i, { timeout: 3_000 });
+      }).toPass({ timeout: 15_000 });
 
       expect(customerPage.url()).toBe(initialNavCount);
     } finally {

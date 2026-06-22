@@ -35,10 +35,17 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const { user, token, csrf } = await this.auth.login(dto);
+    // Cookie security is env-driven so the same build runs locally (HTTP) and
+    // on HTTPS staging/prod. Defaults preserve local behavior: when the env is
+    // unset, secure=false + SameSite=Lax. On HTTPS set COOKIE_SECURE=true, or
+    // browsers silently drop the session cookie and login appears to fail.
     const base = {
       path: '/',
-      sameSite: 'lax' as const,
-      secure: false,
+      sameSite: (process.env.COOKIE_SAMESITE ?? 'lax') as
+        | 'lax'
+        | 'strict'
+        | 'none',
+      secure: process.env.COOKIE_SECURE === 'true',
       maxAge: ONE_HOUR_MS,
     };
     res.cookie('session', token, { ...base, httpOnly: true });

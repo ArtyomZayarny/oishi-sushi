@@ -1,0 +1,70 @@
+{
+  "answer": "We have five exciting new additions to the menu right now! [1] The Toro Truffle Roll features fatty tuna with shaved black truffle and gold leaf, [3] the Chef's Omakase is a twelve-piece chef-selected course, [4] the Sashimi Moriawase showcases seven cuts of the morning's freshest fish, [5] the Ikura Don is a beautiful salmon roe rice bowl, and [6] the Couple's Set is a twenty-piece spread perfect for two. Take your pick!",
+  "recommendations": [
+    {
+      "mealId": "cmqdvmfvu000a19rntiotwv9f",
+      "name": "Toro Truffle Roll",
+      "priceCents": 3800,
+      "imageUrl": "/assets/meals/toro-truffle-roll.jpg",
+      "why": "Flagged as one of our newest items, this luxurious roll combines fatty tuna, shaved black truffle, micro shiso, and gold leaf [1]."
+    },
+    {
+      "mealId": "cmqdvmfk8000919rnh5lkqaty",
+      "name": "Chef’s Omakase",
+      "priceCents": 9500,
+      "imageUrl": "/assets/meals/chefs-omakase.jpg",
+      "why": "A newest addition, this twelve-piece chef-selected omakase is chosen fresh each morning and delivered cold-chain [3]."
+    },
+    {
+      "mealId": "cmqdvmgqm000b19rnzh4zmqq2",
+      "name": "Sashimi Moriawase",
+      "priceCents": 7200,
+      "imageUrl": "/assets/meals/sashimi-moriawase.jpg",
+      "why": "One of our newest dishes, the Sashimi Moriawase offers seven cuts of the morning's best fish including hamachi, uni, and kanpachi [4]."
+    },
+    {
+      "mealId": "cmqdvmh2e000c19rnybrkga3c",
+      "name": "Ikura Don",
+      "priceCents": 3200,
+      "imageUrl": "/assets/meals/ikura-don.jpg",
+      "why": "A newest arrival, the Ikura Don features salmon roe cured in soy and sake served over warm vinegared rice [5]."
+    },
+    {
+      "mealId": "cmqdvmhdm000d19rnnunelfq1",
+      "name": "Couple’s Set",
+      "priceCents": 12800,
+      "imageUrl": "/assets/meals/couples-set.jpg",
+      "why": "Also brand new, the Couple's Set delivers twenty pieces balanced across nigiri, maki, and sashimi — ideal for sharing [6]."
+    }
+  ],
+  "sources": [
+    { "type": "menu", "ref": "cmqdvmfvu000a19rntiotwv9f" },
+    { "type": "menu", "ref": "cmqdvmf8u000819rnerqsipxz" },
+    { "type": "menu", "ref": "cmqdvmfk8000919rnh5lkqaty" },
+    { "type": "menu", "ref": "cmqdvmgqm000b19rnzh4zmqq2" },
+    { "type": "menu", "ref": "cmqdvmh2e000c19rnybrkga3c" },
+    { "type": "menu", "ref": "cmqdvmhdm000d19rnnunelfq1" },
+    {
+      "type": "kb",
+      "ref": "allergen-policy",
+      "section": "Allergens & dietary information"
+    },
+    {
+      "type": "kb",
+      "ref": "faq",
+      "section": "Ordering & frequently asked questions"
+    },
+    {
+      "type": "kb",
+      "ref": "pairings-occasions",
+      "section": "Pairings & occasions"
+    },
+    {
+      "type": "kb",
+      "ref": "taste-guide",
+      "section": "Flavor, richness & texture"
+    }
+  ],
+  "confidence": "high",
+  "requestId": "req_e1550c6c-1d55-4b07-9281-fd1feeaa4d40"
+}

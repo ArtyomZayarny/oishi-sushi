@@ -84,6 +84,14 @@
           "jestConfig": "apps/api/jest.config.cts",
           "passWithNoTests": true
         }
+      },
+      "eval": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "options": {
+          "command": "jest --config apps/api/jest.eval.config.cts --runInBand --passWithNoTests=false",
+          "cwd": "."
+        }
       }
     }
   },
@@ -95,6 +103,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/platform-socket.io": "^11.1.19",
+    "@nestjs/throttler": "6.5.0",
     "@nestjs/websockets": "^11.1.19",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",

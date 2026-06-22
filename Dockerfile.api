@@ -1,0 +1,32 @@
+# syntax=docker/dockerfile:1
+#
+# api service (NestJS) — single-stage on purpose.
+# This is a pnpm WORKSPACE (apps/api, libs/*, packages/* are members), so a
+# multi-stage "copy node_modules" runtime would drop the nested per-package
+# symlink trees pnpm relies on. Building and running from one image is the
+# bulletproof choice for staging, and it keeps the devDeps (tsx, dotenv) that
+# the Prisma seed needs at pre-deploy time. Image size is a non-issue for a
+# private, password-gated demo.
+#
+FROM node:20.20.2-bookworm-slim
+
+# Prisma needs openssl present on debian-slim.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+ENV CI=true
+ENV HUSKY=0
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+
+COPY . .
+RUN pnpm install --frozen-lockfile
+# @prisma/client must be generated before `nx build api` (the bundle imports it).
+RUN pnpm exec prisma generate
+RUN pnpm exec nx build api
+
+EXPOSE 3000
+# migrate + seed run as the Railway pre-deploy command (see railway.api.json),
+# not here — they must execute once per deploy against the live database.
+CMD ["node", "apps/api/dist/main.js"]
