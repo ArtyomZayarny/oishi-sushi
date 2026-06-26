@@ -5,6 +5,7 @@ import {
   ANTHROPIC_CLIENT,
   type AnthropicClientProvider,
 } from './anthropic-client';
+import { extractAvoidedAllergens } from './allergen-extractor';
 import {
   assembleCandidates,
   flattenSnapshot,
@@ -63,8 +64,11 @@ export class SommelierService {
    *   1. `listPublic()` ONCE → the request-scoped snapshot (§4 step 2 / F5: one
    *      snapshot serves the pre-filter here and the T8 post-validation; never a
    *      second fetch).
-   *   2. {@link assembleCandidates} — hard allergen filter (T6) + newest marking;
-   *      returns candidates + excludedIds (the latter handed to T8).
+   *   2. {@link extractAvoidedAllergens} unions the free-text avoidance intent
+   *      parsed from the query with the structured chip (F4-AC1, free-text leg),
+   *      then {@link assembleCandidates} runs the hard allergen filter (T6) +
+   *      newest marking over that effective set; returns candidates + excludedIds
+   *      (the latter handed to T8).
    *   3. `retriever.retrieve(query)` — KB docs (T4).
    *   4. Build the grounded system + user prompt; build the EXACT `sources` list
    *      the prompt numbers and the response returns.
@@ -93,13 +97,27 @@ export class SommelierService {
     //    server-side display join (name/priceCents/imageUrl come from the DB
     //    row, never the model — F5-AC3); the model only ever sees candidates.
     const categories = await this.menu.listPublic();
+    const snapshot = flattenSnapshot(categories);
     const snapshotById = new Map<string, SnapshotMeal>(
-      flattenSnapshot(categories).map((m) => [m.id, m]),
+      snapshot.map((m) => [m.id, m]),
     );
-    // 2. Hard allergen filter + newest marking (T6).
+    // 2. Hard allergen filter + newest marking (T6). The effective avoidance set
+    //    is the structured chip UNION the free-text avoidance intent parsed from
+    //    the query (F4-AC1, free-text leg): `knownAllergens` is the live menu
+    //    vocabulary, so a typed "without shellfish" engages the SAME deterministic
+    //    hard gate as the chip and the candidate list the model sees stays truly
+    //    "already filtered safe" (the prompt's claim). When the extractor finds
+    //    nothing the set equals the chip, so the chip-only path is byte-identical.
+    const knownAllergens = [...new Set(snapshot.flatMap((m) => m.allergens))];
+    const avoidAllergens = [
+      ...new Set([
+        ...(dto.avoidAllergens ?? []),
+        ...extractAvoidedAllergens(dto.query, knownAllergens),
+      ]),
+    ];
     const { candidates, excludedIds } = assembleCandidates(
       categories,
-      dto.avoidAllergens,
+      avoidAllergens,
     );
     // 3. KB retrieval (T4) — naive v1 ignores the query and returns all docs.
     const docs: RetrievedDoc[] = await this.retriever.retrieve(dto.query);

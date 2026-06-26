@@ -9,6 +9,7 @@ import { SOMMELIER_CONFIG_DEFAULTS } from './sommelier.config';
 import type { SommelierModelOutput } from './prompt-builder';
 import { SommelierService } from './sommelier.service';
 import type { SommelierAskDto } from './dto/sommelier-ask.dto';
+import { seedSnapshot } from '../eval/eval-seed.fixture';
 
 /**
  * T7 — SommelierService.ask() orchestration (spec §4 lifecycle).
@@ -156,6 +157,43 @@ describe('T7 — SommelierService.ask() orchestration', () => {
       const userText = h.createMessage.mock.calls[0][0].userText as string;
       expect(userText).not.toContain('cm_fish');
       expect(userText).toContain('cm_safe');
+    });
+  });
+
+  describe('F4-AC1 — free-text allergen avoidance routes into the hard filter', () => {
+    // Live 6-meal seed: Chef's Omakase / Sashimi Moriawase / Couple's Set carry
+    // `shellfish`; Otoro Selection / Toro Truffle Roll / Ikura Don do not. The
+    // query carries the avoidance and NO `avoidAllergens` chip is sent.
+    const SHELLFISH_IDS = ['meal_omakase', 'meal_sashimi', 'meal_couples'];
+    const SAFE_IDS = ['meal_otoro', 'meal_toro_truffle', 'meal_ikura'];
+
+    it('excludes shellfish dishes from the candidates the model sees for "without shellfish" (no chip)', async () => {
+      const h = buildHarness({ snapshot: seedSnapshot() });
+      await h.service.ask(dto({ query: 'something light without shellfish' }));
+      const userText = h.createMessage.mock.calls[0][0].userText as string;
+      for (const id of SHELLFISH_IDS) expect(userText).not.toContain(id);
+      for (const id of SAFE_IDS) expect(userText).toContain(id);
+    });
+
+    it('drops a shellfish pick from recommendations even if the model returns one (fail-closed)', async () => {
+      const h = buildHarness({
+        snapshot: seedSnapshot(),
+        modelOutput: {
+          answer: 'The Otoro Selection [1] is a rich, shellfish-free pick.',
+          picks: [
+            { mealId: 'meal_sashimi', why: 'A clean range of cuts.' },
+            { mealId: 'meal_otoro', why: 'Rich and shellfish-free.' },
+          ],
+          confidence: 'high',
+        },
+      });
+      const res = await h.service.ask(
+        dto({ query: "I'm allergic to shellfish" }),
+      );
+      const ids = res.recommendations.map((r) => r.mealId);
+      for (const id of SHELLFISH_IDS) expect(ids).not.toContain(id);
+      // the safe pick still survives the gate.
+      expect(ids).toContain('meal_otoro');
     });
   });
 

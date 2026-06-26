@@ -91,6 +91,12 @@
     "intent": "allergen"
   },
   {
+    "id": "allergen-freetext-no-shellfish",
+    "query": "Something light without shellfish, please.",
+    "expectMealNames": ["Otoro Selection", "Toro Truffle Roll", "Ikura Don"],
+    "intent": "allergen"
+  },
+  {
     "id": "newest-whats-new",
     "query": "What's new on the menu?",
     "intent": "newest"
