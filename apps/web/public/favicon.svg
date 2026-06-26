@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Oishi Sushi">
+  <defs>
+    <linearGradient id="amber" x1="16" y1="5" x2="16" y2="27" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e89550" />
+      <stop offset="1" stop-color="#d4803a" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#0a0a0a" />
+  <path d="M16 5.5 26.5 16 16 26.5 5.5 16Z" fill="url(#amber)" />
+</svg>
